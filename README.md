@@ -5,15 +5,22 @@ Mohit Chhabra and Vivan Malkani Technical/Economic Potential Model
 Data sources within PG Study:
 California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012
 California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
+--------------------------------------------------------------------------------------------------------------------------------------
 
 RASS density questions: 
 Have a gas water heater (data collected by climate zone)
 Have an electric gas water heater (data collected by climate zone)
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
-
+--------------------------------------------------------------------------------------------------------------------------------------
 Pierre HPWH data for HPWH performance by CZ, location
 Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)
 Selecting GE2014 because most efficient non-CO2 powered HPWH
+
+HPWH consumption = 0.9 * Pierre data (efficiency improvements in past 5 years)
+Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor 
+1.1 because of difference in COP and UEF (actual vs. rated performance)
+Technical Potential = per unit savings * installable measures
+base_consumption_therms = 0.03412956 * base_consumption_kwh
 
 Weighting by location from NEEA:  
 NEEA Residential Building Stock Assessment 2016/2017
@@ -23,16 +30,10 @@ Vented Closet: Main House
 
 Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
-
-
-HPWH consumption = 0.9 * Pierre data (efficiency improvements in past 5 years)
-Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor 
-1.1 because of difference in COP and UEF (actual vs. rated performance)
-Technical Potential = per unit savings * installable measures
-base_consumption_therms = 0.03412956 * base_consumption_kwh
-
+--------------------------------------------------------------------------------------------------------------------------------------
 
 A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
+
 Process for model saturation:
 CZ 1 is average of other 15
 Division of models into 
@@ -52,6 +53,7 @@ Retired_Population = 1/EUL * [All below + code categories] are retired every yea
 post_2015_code: Retired_population + post_2015 code
 Update dying populations
 1/EUL * Instantaneous : intra-category replacement (NOT A MEASURE, THEREFORE NOT CONSIDERED)
+
 PROJECTING FORWARD (THE MODEL)
 From 2018 to 2030
 Retrofit/ROB tag column
@@ -60,6 +62,7 @@ Technical Applicability depends on each measure (base measure to HML efficient-R
 Stock turnover model is unique for each [base-efficient-HML-ROB-RET]-CZ
 Install Limit for each base-efficient measure is technical applicability * Population of base measure in 2018 (could also * Competition group for specific group limit)
 Install limit / EUL gives ROB installs per year
+
 Eg:
 CZ	tech		number		retire-2019
 1	.48ef		1000		100
@@ -69,7 +72,7 @@ Then look to measure table for savings for this base-efficient combination for t
  
 INCORPORATE SINGLE/MULTI FAMILY: CHECK DENSITY, SATURATION, LOCATION AND SIZE TABLES
 
-
+--------------------------------------------------------------------------------------------------------------------------------------
 
 Appliance Efficiency Appendix
 Water heaters CEC minimum UEF requirement
