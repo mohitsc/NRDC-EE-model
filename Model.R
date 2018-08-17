@@ -1,14 +1,13 @@
 # Technical Potential Model 1
 
-#TEST
-
-
+# Import necessary packages ---------------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(readxl)
 library(ggplot2)
 library(xlsx)
 library(readr)
+
 
 # Inputs ------------------------------------------------------------------
 # Climate Zones
@@ -35,6 +34,7 @@ consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consu
 # 2018 Modeled saturation data
 starting_saturation <- tbl_df(read_excel("Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
                                          sheet = "R_input"))
+
 
 
 # Per Unit Savings Table -----------------------------------------------------------
@@ -69,7 +69,6 @@ per_unit_savings_table <- per_unit_savings_table %>%
 
 
 # Stock Turnover Modeling for Gas WH-------------------------------------------------
-#Assume EUL = 15 years from PG study
 
 #Projecting forward
 #Below code gas WH replaced by HPWH and efficient gas WH
@@ -127,7 +126,13 @@ write.xlsx(as.data.frame(installs_per_year),
 # Statewide Technical Potential for Gas Water Heaters to HPWH-------------------------------------------
 technical_potential <- merge(per_unit_savings_table,
                              installs_per_year,
-                             by = c("base_tech_name", "efficient_tech_name", "climate_zone", "delivery_type"))
+                             by = c("base_tech_name", 
+                                    "efficient_tech_name", 
+                                    "measure", 
+                                    "climate_zone", 
+                                    "delivery_type", 
+                                    "measure_applicability", 
+                                    "category_saturation"))
 
 
 kwh_savings <- function(installs) {

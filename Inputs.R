@@ -2,13 +2,15 @@
 #Energy Efficiency Potential and Goals: Study for 2018 and Beyond
 #CPUC MICS 2017 Database
 
-setwd("C:/Users/vmalkani/Dropbox (NRDC)/Mohit Files")
+# Import necessary packages ----------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(readxl)
 library(ggplot2)
 library(xlsx)
 library(readr)
+
+
 
 # PG Data Input -------------------------------------------------------------------------------------------------------
 pg_water_data <- read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx")
@@ -75,6 +77,7 @@ working_PG_data <- separate(working_PG_data, climate_zone,
 working_PG_data <- transform(working_PG_data, climate_zone = as.numeric(unlist(climate_zone)))
 
 
+
 # Writing PG data -------------------------------------------------------------------------
 groups_and_measures <- select(working_PG_data, 
                               tech_name, 
@@ -127,6 +130,7 @@ write.xlsx(as.data.frame(tech_saturation),
            sheetName = "R_input")
 
 
+
 #Climate Zone inputs ---------------------------------------------------------------------------------------
 climate_zones <- select(working_PG_data, climate_zone, location) %>%
   distinct() %>% arrange(climate_zone)
@@ -135,6 +139,7 @@ write.xlsx(as.data.frame(climate_zones),
            "Potential_Model_Input_Tables/climate_zone_list.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
 
 
 
@@ -148,6 +153,7 @@ write.xlsx(as.data.frame(tech_costs),
            "Potential_Model_Input_Tables/tech_costs_table.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
 
 
 # Writing density data ----------------------------------------------------------------------------------------------
@@ -206,6 +212,7 @@ write.xlsx(as.data.frame(housing_cz_data),
            "Potential_Model_Input_Tables/regional_population_data.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
 
 
 # Writing gas water heater size data ----------------------------------------------------------------------------------------------
@@ -306,6 +313,7 @@ write.xlsx(as.data.frame(final_weighted_HPWH),
            "Input_to_Input_Tables/HPWH_weighted_consumption.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
 
 
 # Calculating consumption values of base measures -------------------------
@@ -454,6 +462,8 @@ for(year in 2013:2018){
     select(-num_gas_WH,-saturation)
 }
 
+#merging EUL from tech_list with saturation values 
+saturation_cz_year_wise[[2018]] <- merge(saturation_cz_year_wise[[2018]], select(technology_list, EUL, tech_name), by = "tech_name")
 
 write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]), 
            "Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
