@@ -44,6 +44,7 @@ per_unit_savings_table <- merge(measure_table,
                                 by.x = c("base_tech_name", "building_type"), 
                                 by.y = c("tech_name", "building_type"), 
                                 all.y = FALSE)
+
 per_unit_savings_table <- merge(per_unit_savings_table, 
                                 consumption_table, 
                                 by.x = c("efficient_tech_name", "climate_zone", "building_type"), 
@@ -53,9 +54,22 @@ per_unit_savings_table <- merge(per_unit_savings_table,
          efficient_consumption_kwh = base_consumption_kwh.y,
          efficient_consumption_therms = base_consumption_therms.y)
 
+per_unit_savings_table <- merge(per_unit_savings_table, 
+                                consumption_table, 
+                                by.x = c("code_tech_name", "climate_zone", "building_type"), 
+                                by.y = c("tech_name", "climate_zone", "building_type")) %>%
+  rename(base_consumption_kwh = base_consumption_kwh.x,
+         base_consumption_therms = base_consumption_therms.x,
+         code_consumption_kwh = base_consumption_kwh.y,
+         code_consumption_therms = base_consumption_therms.y)
+
 per_unit_savings_table <- per_unit_savings_table %>% 
-  mutate(savings_kwh = base_consumption_kwh - efficient_consumption_kwh,
-         savings_therms = base_consumption_therms - efficient_consumption_therms) %>%
+  mutate(savings_kwh = ifelse(delivery_type == "RET", 
+                              base_consumption_kwh - efficient_consumption_kwh, 
+                              base_consumption_kwh - code_consumption_kwh),
+         savings_therms = ifelse(delivery_type == "RET", 
+                                 base_consumption_therms - efficient_consumption_therms, 
+                                 base_consumption_therms - code_consumption_therms)) %>%
   select(measure, 
          base_tech_name, 
          efficient_tech_name, 
