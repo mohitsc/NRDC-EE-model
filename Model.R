@@ -46,8 +46,8 @@ per_unit_savings_table <- merge(measure_table,
                                 all.y = FALSE)
 per_unit_savings_table <- merge(per_unit_savings_table, 
                                 consumption_table, 
-                                by.x = c("efficient_tech_name", "climate_zone"), 
-                                by.y = c("tech_name", "climate_zone")) %>%
+                                by.x = c("efficient_tech_name", "climate_zone", "building_type"), 
+                                by.y = c("tech_name", "climate_zone", "building_type")) %>%
   rename(base_consumption_kwh = base_consumption_kwh.x,
          base_consumption_therms = base_consumption_therms.x,
          efficient_consumption_kwh = base_consumption_kwh.y,
@@ -60,7 +60,8 @@ per_unit_savings_table <- per_unit_savings_table %>%
          base_tech_name, 
          efficient_tech_name, 
          delivery_type, 
-         climate_zone, 
+         climate_zone,
+         building_type,
          measure_applicability, 
          population_applicability,
          ROB_RET_ratio,
