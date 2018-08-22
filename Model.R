@@ -32,7 +32,7 @@ measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/sample_measure_
 consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consumption_table.xlsx", sheet = "R_input"))
 
 # 2018 Modeled saturation data
-saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
+saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/saturation_input_data.xlsx", 
                                          sheet = "R_input"))
 
 
@@ -78,8 +78,8 @@ project_until <- 2030
 
 savings_and_saturation_table <- merge(per_unit_savings_table, 
                                       saturation_input, 
-                                      by.x = c("base_tech_name", "climate_zone"), 
-                                      by.y = c("tech_name", "climate_zone"), 
+                                      by.x = c("base_tech_name", "climate_zone", "building_type"), 
+                                      by.y = c("tech_name", "climate_zone", "building_type"), 
                                       all.y = FALSE) %>% 
   mutate(measure_limit = measure_applicability * population_applicability * ROB_RET_ratio * number_of_models)
 

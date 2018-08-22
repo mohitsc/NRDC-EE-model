@@ -468,6 +468,6 @@ for(year in 2013:2018){
 saturation_cz_year_wise[[2018]] <- merge(saturation_cz_year_wise[[2018]], select(technology_list, EUL, tech_name), by = "tech_name")
 
 write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]), 
-           "Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
+           "Potential_Model_Input_Tables/saturation_input_data.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
