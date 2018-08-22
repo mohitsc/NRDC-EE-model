@@ -60,7 +60,7 @@ per_unit_savings_table <- per_unit_savings_table %>%
          base_tech_name, 
          efficient_tech_name, 
          delivery_type, 
-         climate_zone, 
+         climate_zone,
          measure_applicability, 
          population_applicability,
          ROB_RET_ratio,
