@@ -66,7 +66,7 @@ per_unit_savings_table <- merge(per_unit_savings_table,
 per_unit_savings_table <- per_unit_savings_table %>% 
   mutate(savings_kwh = ifelse(delivery_type == "RET", 
                               base_consumption_kwh - efficient_consumption_kwh, 
-                              base_consumption_kwh - code_consumption_kwh),
+                              code_consumption_kwh - efficient_consumption_kwh),
          savings_therms = ifelse(delivery_type == "RET", 
                                  base_consumption_therms - efficient_consumption_therms, 
                                  base_consumption_therms - code_consumption_therms)) %>%
@@ -89,9 +89,27 @@ per_unit_savings_table <- per_unit_savings_table %>%
 current_year <- 2018
 project_until <- 2030
 
+tech_population <- merge(regional_population,
+                         tech_density,
+                         by = "climate_zone") %>% 
+  mutate(tech_group_population = number_of_buildings * fraction_of_homes_ownership) %>%
+  select(climate_zone, 
+         building_type, 
+         technology_group, 
+         tech_group_population)
+
+#saturation to number of models
+tech_population <- merge(saturation_input, 
+                         tech_population,
+                         by = c("climate_zone", "building_type", "technology_group"))
+tech_population <- mutate(tech_population, 
+                           number_of_models = tech_group_population * saturation) %>%
+  select(-tech_group_population,
+         -saturation)
+
 
 savings_and_saturation_table <- merge(per_unit_savings_table, 
-                                      saturation_input, 
+                                      tech_population, 
                                       by.x = c("base_tech_name", "climate_zone", "building_type"), 
                                       by.y = c("tech_name", "climate_zone", "building_type"), 
                                       all.y = FALSE) %>% 
@@ -115,8 +133,8 @@ for(year in (current_year+2):project_until){
                                                            cumulative_installs + measure_limit/EUL,
                                                            measure_limit)) 
   installs_per_year <- bind_cols(installs_per_year, 
-                                 temp = ifelse((installs_per_year$cumulative_installs + installs_per_year$measure_limit/EUL) <= installs_per_year$measure_limit, 
-                                               installs_per_year$measure_limit/EUL,
+                                 temp = ifelse((installs_per_year$cumulative_installs + installs_per_year$measure_limit/installs_per_year$EUL) <= installs_per_year$measure_limit, 
+                                               installs_per_year$measure_limit/installs_per_year$EUL,
                                                installs_per_year$measure_limit - installs_per_year$cumulative_installs))
   
   names(installs_per_year)[names(installs_per_year) == "temp"] <- paste0("installs_", year)
@@ -126,6 +144,7 @@ installs_per_year <- select(installs_per_year,
                             base_tech_name,
                             efficient_tech_name,
                             climate_zone,
+                            building_type,
                             delivery_type,
                             base_population_start,
                             measure_limit,
@@ -144,7 +163,8 @@ technical_potential <- merge(per_unit_savings_table,
                              installs_per_year,
                              by = c("base_tech_name", 
                                     "efficient_tech_name", 
-                                    "climate_zone", 
+                                    "climate_zone",
+                                    "building_type",
                                     "delivery_type"))
 
 

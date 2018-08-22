@@ -449,23 +449,16 @@ for(year in start_year:current_year){
   saturation_cz_year_wise[[year]] <- tech_saturation
 } 
 
-gas_wh_cz <- bind_cols(filter(housing_cz_data, building_type == "Single Family"), 
-                       filter(tech_group_cz_density, technology_group == "Gas Water Heaters") %>% 
-                         select(technology_group, fraction_of_homes_ownership))
-gas_wh_cz <- mutate(gas_wh_cz, num_gas_WH = number_of_buildings * fraction_of_homes_ownership)
-gas_wh_cz <- select(gas_wh_cz, climate_zone, num_gas_WH)
-
-for(year in 2013:2018){
-  saturation_cz_year_wise[[year]] <- merge(saturation_cz_year_wise[[year]], 
-                                           gas_wh_cz,
-                                           by = "climate_zone")
-  saturation_cz_year_wise[[year]] <- mutate(saturation_cz_year_wise[[year]], 
-                                            number_of_models = num_gas_WH * saturation) %>%
-    select(-num_gas_WH,-saturation)
-}
-
 #merging EUL from tech_list with saturation values 
-saturation_cz_year_wise[[2018]] <- merge(saturation_cz_year_wise[[2018]], select(technology_list, EUL, tech_name), by = "tech_name")
+saturation_cz_year_wise[[2018]] <- merge(saturation_cz_year_wise[[2018]], 
+                                         select(technology_list, EUL, tech_name), 
+                                         by = "tech_name") %>%
+  mutate(building_type = "Single Family",
+         technology_group = ifelse(tech_name == "GE 2014 Heat Pump Water Heater- low cost" | 
+                                  tech_name == "GE 2014 Heat Pump Water Heater- medium cost" |
+                                  tech_name == "GE 2014 Heat Pump Water Heater- high cost" ,
+                                   "Elec Water Heaters",
+                                  "Gas Water Heaters"))
 
 write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]), 
            "Potential_Model_Input_Tables/saturation_input_data.xlsx", 
