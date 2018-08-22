@@ -14,7 +14,7 @@ library(readr)
 climate_zone_list <- tbl_df(read_excel("Potential_Model_Input_Tables/climate_zone_list.xlsx", sheet = "R_input"))
 
 # Houses per CZ 
-houses_per_climate_zone <- tbl_df(read_excel("Potential_Model_Input_Tables/regional_population_data.xlsx", sheet = "R_input"))
+regional_population <- tbl_df(read_excel("Potential_Model_Input_Tables/regional_population_data.xlsx", sheet = "R_input"))
 
 # Technology List
 technology_list <- tbl_df(read_excel("Potential_Model_Input_Tables/independent_tech_list.xlsx", sheet = "R_input"))
@@ -32,15 +32,14 @@ measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/sample_measure_
 consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consumption_table.xlsx", sheet = "R_input"))
 
 # 2018 Modeled saturation data
-starting_saturation <- tbl_df(read_excel("Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
+saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/2018_saturation_data.xlsx", 
                                          sheet = "R_input"))
 
 
 
 # Per Unit Savings Table -----------------------------------------------------------
 
-per_unit_savings_table <- measure_table
-per_unit_savings_table <- merge(per_unit_savings_table, 
+per_unit_savings_table <- merge(measure_table, 
                                 consumption_table, 
                                 by.x = "base_tech_name", 
                                 by.y = "tech_name", 
@@ -63,33 +62,36 @@ per_unit_savings_table <- per_unit_savings_table %>%
          delivery_type, 
          climate_zone, 
          measure_applicability, 
-         category_saturation, 
+         population_applicability,
+         ROB_RET_ratio,
          savings_kwh, 
          savings_therms) %>% arrange(measure, climate_zone)
 
 
-# Stock Turnover Modeling for Gas WH-------------------------------------------------
+# Stock Turnover Modeling-------------------------------------------------
 
 #Projecting forward
-#Below code gas WH replaced by HPWH and efficient gas WH
 current_year <- 2018
 project_until <- 2030
 
 
 savings_and_saturation_table <- merge(per_unit_savings_table, 
-                                      starting_saturation, 
+                                      saturation_input, 
                                       by.x = c("base_tech_name", "climate_zone"), 
                                       by.y = c("tech_name", "climate_zone"), 
                                       all.y = FALSE) %>% 
-  mutate(measure_limit = measure_applicability * category_saturation * number_of_models)
+  mutate(measure_limit = measure_applicability * population_applicability * ROB_RET_ratio * number_of_models)
 
+#divide into RET and ROB subsets to adjust installs for first year of measure adoption
+#all RET measures adopted in first year
+#ROB measures adopted at rate of measure limit divided by EUL each year
 RET_subset <- filter(savings_and_saturation_table, delivery_type == "RET") %>% 
   mutate(installs_2019 = measure_limit)
 ROB_subset <- filter(savings_and_saturation_table, delivery_type == "ROB") %>% 
   mutate(installs_2019 = measure_limit/EUL)
 
 installs_per_year <- rbind(RET_subset, ROB_subset)
-names(installs_per_year)[names(installs_per_year) == "number_of_models"] <- "population_2018"
+names(installs_per_year)[names(installs_per_year) == "number_of_models"] <- "base_population_start"
 installs_per_year <- mutate(installs_per_year, cumulative_installs = installs_2019) 
 
 for(year in (current_year+2):project_until){
@@ -110,8 +112,7 @@ installs_per_year <- select(installs_per_year,
                             efficient_tech_name,
                             climate_zone,
                             delivery_type,
-                            measure:category_saturation,
-                            population_2018,
+                            base_population_start,
                             measure_limit,
                             cumulative_installs,
                             installs_2019,
@@ -123,16 +124,13 @@ write.xlsx(as.data.frame(installs_per_year),
            row.names = FALSE,
            sheetName = "R_input")
 
-# Statewide Technical Potential for Gas Water Heaters to HPWH-------------------------------------------
+# Statewide Technical Potential-------------------------------------------
 technical_potential <- merge(per_unit_savings_table,
                              installs_per_year,
                              by = c("base_tech_name", 
                                     "efficient_tech_name", 
-                                    "measure", 
                                     "climate_zone", 
-                                    "delivery_type", 
-                                    "measure_applicability", 
-                                    "category_saturation"))
+                                    "delivery_type"))
 
 
 kwh_savings <- function(installs) {
@@ -148,8 +146,11 @@ therms_savings <- function(installs) {
 technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
   select(-savings_kwh,
          -savings_therms,
-         -population_2018,
-         -measure_limit) %>% 
+         -base_population_start,
+         -measure_limit,
+         -measure_applicability,
+         -ROB_RET_ratio,
+         -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
@@ -162,8 +163,11 @@ write.xlsx(as.data.frame(technical_potential_kwh),
 technical_potential_therms <- mutate_at(technical_potential, vars(contains("installs")), .funs = therms_savings) %>% 
   select(-savings_kwh,
          -savings_therms,
-         -population_2018,
-         -measure_limit) %>% 
+         -base_population_start,
+         -measure_limit,
+         -measure_applicability,
+         -ROB_RET_ratio,
+         -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
