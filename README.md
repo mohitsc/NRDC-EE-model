@@ -7,6 +7,10 @@ California Lighting & Appl. Saturation Survey (CLASS), Residential baseline stud
 California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
 
 --------------------------------------------------------------------------------------------------------------------------------------
+Regional Population data from RASS 2009
+By Climate Zone: Single Family, Multi Family, Mobile Homes and Other
+
+
 
 RASS density questions: 
 Have a gas water heater (data collected by climate zone)
