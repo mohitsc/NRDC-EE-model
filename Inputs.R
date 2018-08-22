@@ -356,11 +356,13 @@ technology_consumption <- technology_consumption %>%
 
 technology_consumption <- technology_consumption %>% 
   mutate(base_consumption_kwh = ifelse(tech_group == "Gas Water Heaters", 0, base_consumption_kwh)) %>%
-  mutate(base_consumption_therms = ifelse(tech_group == "Elec Water Heaters", 0, base_consumption_therms))
+  mutate(base_consumption_therms = ifelse(tech_group == "Elec Water Heaters", 0, base_consumption_therms)) %>%
+  mutate(building_type = "Single Family")
 
 input_consumption_table <- select(technology_consumption,
                                   tech_name,
                                   climate_zone,
+                                  building_type,
                                   base_consumption_kwh,
                                   base_consumption_therms)
 
