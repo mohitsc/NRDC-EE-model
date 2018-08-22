@@ -41,8 +41,8 @@ saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/2018_saturat
 
 per_unit_savings_table <- merge(measure_table, 
                                 consumption_table, 
-                                by.x = "base_tech_name", 
-                                by.y = "tech_name", 
+                                by.x = c("base_tech_name", "building_type"), 
+                                by.y = c("tech_name", "building_type"), 
                                 all.y = FALSE)
 per_unit_savings_table <- merge(per_unit_savings_table, 
                                 consumption_table, 
