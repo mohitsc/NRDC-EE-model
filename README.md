@@ -1,38 +1,35 @@
 # NRDC-EE-model
 Mohit Chhabra and Vivan Malkani Technical/Economic Potential Model
 
-2017 CPUC PG Study for technology names
-Data sources within PG Study:
-California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012
-California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
-
+2017 CPUC PG Study for technology names  
+Data sources within PG Study:  
+California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012  
+California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data  
 --------------------------------------------------------------------------------------------------------------------------------------
-Regional Population data from RASS 2009
-By Climate Zone: Single Family, Multi Family, Mobile Homes and Other
+Regional Population data from RASS 2009  
+By Climate Zone: Single Family, Multi Family, Mobile Homes and Other  
  
-
-
-RASS density questions: 
-Have a gas water heater (data collected by climate zone)
-Have an electric gas water heater (data collected by climate zone)
-Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
+RASS density questions:   
+Have a gas water heater (data collected by climate zone)  
+Have an electric gas water heater (data collected by climate zone)  
+Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
 --------------------------------------------------------------------------------------------------------------------------------------
 
-Pierre HPWH data for HPWH performance by CZ, location
-Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)
-Selecting GE2014 because most efficient non-CO2 powered HPWH
+Pierre HPWH data for HPWH performance by CZ, location  
+Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)  
+Selecting GE2014 because most efficient non-CO2 powered HPWH  
 
-HPWH consumption = 0.9 * Pierre data (efficiency improvements in past 5 years)
-Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor 
-1.1 because of difference in COP and UEF (actual vs. rated performance)
-Technical Potential = per unit savings * installable measures
-base_consumption_therms = 0.03412956 * base_consumption_kwh
+HPWH consumption = 0.9 * Pierre data (efficiency improvements in past 5 years)  
+Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor   
+1.1 because of difference in COP and UEF (actual vs. rated performance)      
+Technical Potential = per unit savings * installable measures    
+base_consumption_therms = 0.03412956 * base_consumption_kwh  
 
-Weighting by location from NEEA:  
-NEEA Residential Building Stock Assessment 2016/2017
-Basement: Basement + Crawlspace
-Garage: Garage + Other
-Vented Closet: Main House
+Weighting by location from NEEA:    
+NEEA Residential Building Stock Assessment 2016/2017  
+Basement: Basement + Crawlspace  
+Garage: Garage + Other  
+Vented Closet: Main House  
 
 Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
