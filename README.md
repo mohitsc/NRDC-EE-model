@@ -46,7 +46,8 @@ o	[1/EUL * 2015_code]: replaced by post_2015_code
 o	[1/EUL * post_2015_code]: intra-category replacement 
 •	Start year to end of projected period:
 o	Stock turnover model is independent for each measure
-o	Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base measure in 2018]
+o	Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base
+measure in 2018]
 o	Install limit = RET installs in first year
 o	[Install limit/ EUL] gives ROB installs per year
 
