@@ -57,10 +57,10 @@ ROB per unit savings = [code technology consumption – efficient technology con
 RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2
 
 Technical potential estimates:
-Potential installs for each year
-First year savings in kWh = per unit savings * installs that year
-First year savings in therms = per unit savings * installs that year
-Lifetime savings for each measure
+ Potential installs for each year
+ First year savings in kWh = per unit savings * installs that year
+ First year savings in therms = per unit savings * installs that year
+ Lifetime savings for each measure
 
 
 •	Adding new measures
