@@ -104,23 +104,21 @@ write.xlsx(as.data.frame(consumption),
 
 
 # Writing saturation by climate zone data 
-saturation_gas_data <- select(working_PG_data,
+saturation_PG_data <- select(working_PG_data,
                               climate_zone,
                               tech_name,
                               tech_group,
-                              tech_initial_saturation) %>% 
-  filter(tech_group == "Gas Water Heaters") %>% 
-  select(-tech_group) %>% arrange(climate_zone)
+                              tech_initial_saturation)%>% 
+  arrange(climate_zone)
 
-saturation_gas_data <- arrange(saturation_gas_data, tech_name) %>% 
+saturation_PG_data <- arrange(saturation_PG_data, tech_name) %>% 
   distinct() %>% 
   group_by(climate_zone, tech_name)
 
-tech_saturation <- tbl_df(summarize(saturation_gas_data, 
+tech_saturation <- tbl_df(summarize(saturation_PG_data, 
                                     mean_saturation = mean(tech_initial_saturation),
                                     min_saturation = min(tech_initial_saturation),
-                                    max_saturation = max(tech_initial_saturation)
-)) %>%
+                                    max_saturation = max(tech_initial_saturation))) %>%
   arrange(climate_zone, tech_name) %>% 
   mutate(check = (max_saturation - min_saturation)/mean_saturation)
 
