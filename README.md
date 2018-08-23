@@ -7,6 +7,12 @@ California Lighting & Appl. Saturation Survey (CLASS), Residential baseline stud
 California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
 
 --------------------------------------------------------------------------------------------------------------------------------------
+Github system and planning to review the model:  
+Enables version control  
+Easy to share code   
+Allows for collaboration, review and feedback  
+
+--------------------------------------------------------------------------------------------------------------------------------------
 Regional Population data from RASS 2009  
 By Climate Zone: Single Family, Multi Family, Mobile Homes and Other  
  
@@ -52,16 +58,26 @@ measure in 2018]
 Install limit = RET installs in first year  
 [Install limit/ EUL] gives ROB installs per year  
 
+Eg:  
+CZ	tech		number		retire-2019  
+1	.48ef		1000		100  
+Install limit for HIGH cost HPWH= 1000 * .9 (tech applicability) * .333 (RETROFIT)     
+Number of installs in 2020 is 300/EUL (ROB)    
+Then look to measure table for savings for this base-efficient combination for technical potential for that base-efficient-CZ combo (divided into HML and ROB/RET)  
+
+--------------------------------------------------------------------------------------------------------------------------------------
 Per Unit Savings:  
 ROB per unit savings = [code technology consumption – efficient technology consumption]  
 RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2  
 
+--------------------------------------------------------------------------------------------------------------------------------------
 Technical potential estimates:  
  Potential installs for each year  
  First year savings in kWh = per unit savings * installs that year  
  First year savings in therms = per unit savings * installs that year  
  Lifetime savings for each measure  
 
+--------------------------------------------------------------------------------------------------------------------------------------
 Adding new measures:  
 Saturation table  
 Density table  
@@ -69,17 +85,7 @@ Consumption table
 Regional Population table (if different from CA Title 24 climate zones)  
 EUL  
 
-Github system and planning to review the model:  
-Enables version control  
-Easy to share code   
-Allows for collaboration, review and feedback  
-
-Eg:  
-CZ	tech		number		retire-2019  
-1	.48ef		1000		100  
-Install limit for HIGH cost HPWH= 1000 * .9 (tech applicability) * .333 (RETROFIT)     
-Number of installs in 2020 is 300/EUL (ROB)    
-Then look to measure table for savings for this base-efficient combination for technical potential for that base-efficient-CZ combo (divided into HML and ROB/RET)  
+--------------------------------------------------------------------------------------------------------------------------------------
  
 INCORPORATE SINGLE/MULTI FAMILY: CHECK DENSITY, SATURATION, LOCATION AND SIZE TABLES
 
