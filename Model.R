@@ -156,7 +156,7 @@ installs_per_year <- select(installs_per_year,
 write.xlsx(as.data.frame(installs_per_year), 
            "Potential_Model_Output_Tables/tech_potential_installs.xlsx", 
            row.names = FALSE,
-           sheetName = "R_input")
+           sheetName = "R_output")
 
 # Statewide Technical Potential-------------------------------------------
 technical_potential <- merge(per_unit_savings_table,
@@ -193,7 +193,7 @@ technical_potential_kwh <- mutate_at(technical_potential, vars(contains("install
 write.xlsx(as.data.frame(technical_potential_kwh), 
            "Potential_Model_Output_Tables/tech_potential_kwh_savings.xlsx", 
            row.names = FALSE,
-           sheetName = "R_input")
+           sheetName = "R_output")
 
 technical_potential_therms <- mutate_at(technical_potential, vars(contains("installs")), .funs = therms_savings) %>% 
   select(-savings_kwh,
@@ -210,7 +210,7 @@ technical_potential_therms <- mutate_at(technical_potential, vars(contains("inst
 write.xlsx(as.data.frame(technical_potential_therms), 
            "Potential_Model_Output_Tables/tech_potential_therms_savings.xlsx", 
            row.names = FALSE,
-           sheetName = "R_input")
+           sheetName = "R_output")
 
 # Lifetime savings table
 lifetime_savings_kwh <- technical_potential_kwh %>% 
