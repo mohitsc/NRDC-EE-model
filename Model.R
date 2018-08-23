@@ -118,14 +118,17 @@ savings_and_saturation_table <- merge(per_unit_savings_table,
 #divide into RET and ROB subsets to adjust installs for first year of measure adoption
 #all RET measures adopted in first year
 #ROB measures adopted at rate of measure limit divided by EUL each year
+
 RET_subset <- filter(savings_and_saturation_table, delivery_type == "RET") %>% 
-  mutate(installs_2019 = measure_limit)
+  mutate(installs_first_year = measure_limit)
 ROB_subset <- filter(savings_and_saturation_table, delivery_type == "ROB") %>% 
-  mutate(installs_2019 = measure_limit/EUL)
+  mutate(installs_first_year = measure_limit/EUL)
 
 installs_per_year <- rbind(RET_subset, ROB_subset)
 names(installs_per_year)[names(installs_per_year) == "number_of_models"] <- "base_population_start"
-installs_per_year <- mutate(installs_per_year, cumulative_installs = installs_2019) 
+installs_per_year <- mutate(installs_per_year, cumulative_installs = installs_first_year) 
+
+names(installs_per_year)[names(installs_per_year) == "installs_first_year"] <- paste0("installs_", current_year+1)
 
 for(year in (current_year+2):project_until){
   installs_per_year <- mutate(installs_per_year, 
@@ -149,8 +152,7 @@ installs_per_year <- select(installs_per_year,
                             base_population_start,
                             measure_limit,
                             cumulative_installs,
-                            installs_2019,
-                            installs_2020:installs_2030) %>% 
+                            vars_select(names(installs_per_year), contains("installs"))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
 
 write.xlsx(as.data.frame(installs_per_year), 
@@ -215,16 +217,16 @@ write.xlsx(as.data.frame(technical_potential_therms),
 # Lifetime savings table
 lifetime_savings_kwh <- technical_potential_kwh %>% 
   group_by(measure, delivery_type) %>%
-  summarise_at(vars(savings_kwh_2019:savings_kwh_2030), sum)
+  summarise_at(vars_select(names(technical_potential_kwh), contains("savings_kwh")), sum)
 
-lifetime_savings_kwh <- merge(select(measure_table, measure, base_tech_name), 
+lifetime_savings_kwh <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name), 
                               lifetime_savings_kwh, 
                               by = "measure") %>% distinct()
 
 lifetime_savings_therms <- technical_potential_therms %>% 
   group_by(measure, delivery_type) %>%
-  summarise_at(vars(savings_therms_2019:savings_therms_2030), sum)
+  summarise_at(vars_select(names(technical_potential_therms), contains("savings_therms")), sum)
 
-lifetime_savings_therms <- merge(select(measure_table, measure, base_tech_name), 
+lifetime_savings_therms <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name), 
                               lifetime_savings_therms, 
                               by = "measure") %>% distinct()
