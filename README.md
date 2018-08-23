@@ -45,6 +45,9 @@ Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt 
 --------------------------------------------------------------------------------------------------------------------------------------
 A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB  
 
+Gas WH Code UEF 2015: 0.60
+Elec WH Code UEF 2015: .945
+
 Input to start stock turnover model:   
 [1/EUL * [All efficiency categories]] are retired every year   
 [1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code  
