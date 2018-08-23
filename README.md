@@ -39,13 +39,13 @@ Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt 
 --------------------------------------------------------------------------------------------------------------------------------------
 A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
 
-Input to start : 
+Input to start stock turnover model: 
 [1/EUL * [All efficiency categories]] are retired every year 
 [1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code
 [1/EUL * 2015_code]: replaced by post_2015_code
 [1/EUL * post_2015_code]: intra-category replacement 
 
-Start year to end of projected period:
+Start year to end of projected period stock turnover model:
 Stock turnover model is independent for each measure
 Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base
 measure in 2018]
