@@ -78,7 +78,7 @@ per_unit_savings_table <- per_unit_savings_table %>%
          building_type,
          measure_applicability, 
          population_applicability,
-         ROB_RET_ratio,
+         delivery_type_proportion,
          savings_kwh, 
          savings_therms) %>% arrange(measure, climate_zone)
 
@@ -113,7 +113,7 @@ savings_and_saturation_table <- merge(per_unit_savings_table,
                                       by.x = c("base_tech_name", "climate_zone", "building_type"), 
                                       by.y = c("tech_name", "climate_zone", "building_type"), 
                                       all.y = FALSE) %>% 
-  mutate(measure_limit = measure_applicability * population_applicability * ROB_RET_ratio * number_of_models)
+  mutate(measure_limit = measure_applicability * population_applicability * delivery_type_proportion * number_of_models)
 
 #divide into RET and ROB subsets to adjust installs for first year of measure adoption
 #all RET measures adopted in first year
@@ -184,7 +184,7 @@ technical_potential_kwh <- mutate_at(technical_potential, vars(contains("install
          -base_population_start,
          -measure_limit,
          -measure_applicability,
-         -ROB_RET_ratio,
+         -delivery_type_proportion,
          -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
@@ -201,7 +201,7 @@ technical_potential_therms <- mutate_at(technical_potential, vars(contains("inst
          -base_population_start,
          -measure_limit,
          -measure_applicability,
-         -ROB_RET_ratio,
+         -delivery_type_proportion,
          -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
