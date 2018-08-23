@@ -37,29 +37,31 @@ Vented Closet: Main House
 Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
 --------------------------------------------------------------------------------------------------------------------------------------
-•	A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
+A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
 
-•	Input to start : 
-o	[1/EUL * [All efficiency categories]] are retired every year 
-o	[1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code
-o	[1/EUL * 2015_code]: replaced by post_2015_code
-o	[1/EUL * post_2015_code]: intra-category replacement 
-•	Start year to end of projected period:
-o	Stock turnover model is independent for each measure
-o	Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base
+Input to start : 
+[1/EUL * [All efficiency categories]] are retired every year 
+[1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code
+[1/EUL * 2015_code]: replaced by post_2015_code
+[1/EUL * post_2015_code]: intra-category replacement 
+
+Start year to end of projected period:
+Stock turnover model is independent for each measure
+Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base
 measure in 2018]
-o	Install limit = RET installs in first year
-o	[Install limit/ EUL] gives ROB installs per year
+Install limit = RET installs in first year
+[Install limit/ EUL] gives ROB installs per year
 
-•	Per Unit Savings:
-o	ROB per unit savings = [code technology consumption – efficient technology consumption]
-o	RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2
+Per Unit Savings:
+ROB per unit savings = [code technology consumption – efficient technology consumption]
+RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2
 
-•	Technical potential estimates
-o	First year savings in kWh
-o	First year savings in therms
-o	Potential installs for each year
-o	Lifetime savings for each measure
+Technical potential estimates:
+Potential installs for each year
+First year savings in kWh = per unit savings * installs that year
+First year savings in therms = per unit savings * installs that year
+Lifetime savings for each measure
+
 
 •	Adding new measures
 o	Saturation table
