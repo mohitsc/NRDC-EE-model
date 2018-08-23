@@ -69,7 +69,7 @@ per_unit_savings_table <- per_unit_savings_table %>%
                               code_consumption_kwh - efficient_consumption_kwh),
          savings_therms = ifelse(delivery_type == "RET", 
                                  base_consumption_therms - efficient_consumption_therms, 
-                                 base_consumption_therms - code_consumption_therms)) %>%
+                                 code_consumption_therms - efficient_consumption_therms)) %>%
   select(measure, 
          base_tech_name, 
          efficient_tech_name, 
@@ -212,3 +212,19 @@ write.xlsx(as.data.frame(technical_potential_therms),
            row.names = FALSE,
            sheetName = "R_input")
 
+# Lifetime savings table
+lifetime_savings_kwh <- technical_potential_kwh %>% 
+  group_by(measure, delivery_type) %>%
+  summarise_at(vars(savings_kwh_2019:savings_kwh_2030), sum)
+
+lifetime_savings_kwh <- merge(select(measure_table, measure, base_tech_name), 
+                              lifetime_savings_kwh, 
+                              by = "measure") %>% distinct()
+
+lifetime_savings_therms <- technical_potential_therms %>% 
+  group_by(measure, delivery_type) %>%
+  summarise_at(vars(savings_therms_2019:savings_therms_2030), sum)
+
+lifetime_savings_therms <- merge(select(measure_table, measure, base_tech_name), 
+                              lifetime_savings_therms, 
+                              by = "measure") %>% distinct()
