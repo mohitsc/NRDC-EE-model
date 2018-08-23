@@ -62,18 +62,17 @@ Technical potential estimates:
  First year savings in therms = per unit savings * installs that year
  Lifetime savings for each measure
 
+Adding new measures:
+Saturation table
+Density table
+Consumption table
+Regional Population table (if different from CA Title 24 climate zones)
+EUL
 
-•	Adding new measures
-o	Saturation table
-o	Density table
-o	Consumption table
-o	Regional Population table (if different from CA Title 24 climate zones)
-o	EUL
-
-•	Github system and planning to review the model
-o	Enables version control
-o	Easy to share code 
-o	Allows for collaboration, review and feedback
+Github system and planning to review the model:
+Enables version control
+Easy to share code 
+Allows for collaboration, review and feedback
 
 Eg:
 CZ	tech		number		retire-2019
