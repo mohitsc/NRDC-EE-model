@@ -37,37 +37,40 @@ Vented Closet: Main House
 Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
 --------------------------------------------------------------------------------------------------------------------------------------
+•	A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
 
-A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
+•	Input to start : 
+o	[1/EUL * [All efficiency categories]] are retired every year 
+o	[1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code
+o	[1/EUL * 2015_code]: replaced by post_2015_code
+o	[1/EUL * post_2015_code]: intra-category replacement 
+•	Start year to end of projected period:
+o	Stock turnover model is independent for each measure
+o	Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base measure in 2018]
+o	Install limit = RET installs in first year
+o	[Install limit/ EUL] gives ROB installs per year
 
-Process for model saturation:
-CZ 1 is average of other 15
-Division of models into 
-"Small Gas Storage Water Heater (0.48 EF - 0.559 EF)" =  0.48-0.519 EF : 0.52-0.559 EF,
-2015 code: "Small Gas Storage Water Heater (0.56 EF - 0.599 EF)" = 0.56-0.599 EF
-Post 2015 code: “Small Gas Storage Water Heater (0.60 EF - 0.639 EF)" = 0.60-0.639 EF
-"Instantaneous Gas Water Heater (0.80 EF - 0.879 EF)" = 0.80-0.839 EF : 0.84-0.879 EF
-From 2013 to 2018
-1/EUL * [All categories] are retired every year
-1/EUL * lowest_EF : half replaced by 2015_code, half replaced by post_2015_code  
-1/EUL * 2015_code : replaced by post_2015_code  
-1/EUL * post_2015_code: intra-category replacement
-1/EUL * Instantaneous : intra-category replacement (NOT A MEASURE, THEREFORE NOT CONSIDERED)
+•	Per Unit Savings:
+o	ROB per unit savings = [code technology consumption – efficient technology consumption]
+o	RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2
 
-From 2015 to 2018
-Retired_Population = 1/EUL * [All below + code categories] are retired every year
-post_2015_code: Retired_population + post_2015 code
-Update dying populations
-1/EUL * Instantaneous : intra-category replacement (NOT A MEASURE, THEREFORE NOT CONSIDERED)
+•	Technical potential estimates
+o	First year savings in kWh
+o	First year savings in therms
+o	Potential installs for each year
+o	Lifetime savings for each measure
 
-PROJECTING FORWARD (THE MODEL)
-From 2018 to 2030
-Retrofit/ROB tag column
-Competition group value (fractions of 100%, eg. 33% each for high, medium and low costs of HPWH, potentially divided by 2 if doing 50% ROB and 50% RET
-Technical Applicability depends on each measure (base measure to HML efficient-ROB & HML-efficient-RET)
-Stock turnover model is unique for each [base-efficient-HML-ROB-RET]-CZ
-Install Limit for each base-efficient measure is technical applicability * Population of base measure in 2018 (could also * Competition group for specific group limit)
-Install limit / EUL gives ROB installs per year
+•	Adding new measures
+o	Saturation table
+o	Density table
+o	Consumption table
+o	Regional Population table (if different from CA Title 24 climate zones)
+o	EUL
+
+•	Github system and planning to review the model
+o	Enables version control
+o	Easy to share code 
+o	Allows for collaboration, review and feedback
 
 Eg:
 CZ	tech		number		retire-2019
