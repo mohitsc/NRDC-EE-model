@@ -4,7 +4,8 @@ Mohit Chhabra and Vivan Malkani Technical/Economic Potential Model
 2017 CPUC PG Study for technology names  
 Data sources within PG Study:  
 California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012  
-California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data  
+California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
+
 --------------------------------------------------------------------------------------------------------------------------------------
 Regional Population data from RASS 2009  
 By Climate Zone: Single Family, Multi Family, Mobile Homes and Other  
@@ -13,6 +14,7 @@ RASS density questions:
 Have a gas water heater (data collected by climate zone)  
 Have an electric gas water heater (data collected by climate zone)  
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
+
 --------------------------------------------------------------------------------------------------------------------------------------
 
 Pierre HPWH data for HPWH performance by CZ, location  
@@ -31,54 +33,56 @@ Basement: Basement + Crawlspace
 Garage: Garage + Other  
 Vented Closet: Main House  
 
-Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data
-Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”
+Weighting by size: <60 gallons and >60 gallons as proxies for 50 gallons and 80 gallons (sizes in Pierre’s dataset), CLASS 2012 data  
+Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
+
 --------------------------------------------------------------------------------------------------------------------------------------
-A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB
+A measure is defined as the combination of base technology, efficient technology, building type (SF/ MF/ Other), RET/ROB  
 
-Input to start stock turnover model: 
-[1/EUL * [All efficiency categories]] are retired every year 
-[1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code
-[1/EUL * 2015_code]: replaced by post_2015_code
-[1/EUL * post_2015_code]: intra-category replacement 
+Input to start stock turnover model:   
+[1/EUL * [All efficiency categories]] are retired every year   
+[1/EUL * lowest_EF]: half replaced by 2015_code, half replaced by post_2015_code  
+[1/EUL * 2015_code]: replaced by post_2015_code  
+[1/EUL * post_2015_code]: intra-category replacement   
 
-Start year to end of projected period stock turnover model:
-Stock turnover model is independent for each measure
+Start year to end of projected period stock turnover model:  
+Stock turnover model is independent for each measure  
 Total Install Limit for each measure is [technical applicability * population applicability * ROB_RET_ratio * population of base
-measure in 2018]
-Install limit = RET installs in first year
-[Install limit/ EUL] gives ROB installs per year
+measure in 2018]  
+Install limit = RET installs in first year  
+[Install limit/ EUL] gives ROB installs per year  
 
-Per Unit Savings:
-ROB per unit savings = [code technology consumption – efficient technology consumption]
-RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2
+Per Unit Savings:  
+ROB per unit savings = [code technology consumption – efficient technology consumption]  
+RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2  
 
-Technical potential estimates:
- Potential installs for each year
- First year savings in kWh = per unit savings * installs that year
- First year savings in therms = per unit savings * installs that year
- Lifetime savings for each measure
+Technical potential estimates:  
+ Potential installs for each year  
+ First year savings in kWh = per unit savings * installs that year  
+ First year savings in therms = per unit savings * installs that year  
+ Lifetime savings for each measure  
 
-Adding new measures:
-Saturation table
-Density table
-Consumption table
-Regional Population table (if different from CA Title 24 climate zones)
-EUL
+Adding new measures:  
+Saturation table  
+Density table  
+Consumption table  
+Regional Population table (if different from CA Title 24 climate zones)  
+EUL  
 
-Github system and planning to review the model:
-Enables version control
-Easy to share code 
-Allows for collaboration, review and feedback
+Github system and planning to review the model:  
+Enables version control  
+Easy to share code   
+Allows for collaboration, review and feedback  
 
-Eg:
-CZ	tech		number		retire-2019
-1	.48ef		1000		100
-Install limit for HIGH cost HPWH= 1000 * .9 (tech applicability) * .333  RETROFIT 
-Number of installs in 2020 is 300/EUL  ROB
-Then look to measure table for savings for this base-efficient combination for technical potential for that base-efficient-CZ combo (divided into HML and ROB/RET)
+Eg:  
+CZ	tech		number		retire-2019  
+1	.48ef		1000		100  
+Install limit for HIGH cost HPWH= 1000 * .9 (tech applicability) * .333 (RETROFIT)     
+Number of installs in 2020 is 300/EUL (ROB)    
+Then look to measure table for savings for this base-efficient combination for technical potential for that base-efficient-CZ combo (divided into HML and ROB/RET)  
  
 INCORPORATE SINGLE/MULTI FAMILY: CHECK DENSITY, SATURATION, LOCATION AND SIZE TABLES
+
 --------------------------------------------------------------------------------------------------------------------------------------
 
 Appliance Efficiency Appendix
