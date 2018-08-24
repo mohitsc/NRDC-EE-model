@@ -207,18 +207,6 @@ annual_technical_potential_kwh <- rbind(mutate_at(ROB_subset,
   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
 
-# technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
-#   select(-savings_kwh,
-#          -savings_therms,
-#          -base_population_start,
-#          -measure_limit,
-#          -measure_applicability,
-#          -delivery_type_proportion,
-#          -population_applicability) %>% 
-#   rename("cumulative_savings" = cumulative_installs) %>%
-#   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
-#   arrange(base_tech_name, efficient_tech_name, climate_zone)
-
 write.xlsx(as.data.frame(annual_technical_potential_kwh), 
            "Potential_Model_Output_Tables/tech_potential_kwh_savings.xlsx", 
            row.names = FALSE,
@@ -241,18 +229,6 @@ annual_technical_potential_therms <- rbind(mutate_at(ROB_subset,
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
-
-# technical_potential_therms <- mutate_at(technical_potential, vars(contains("installs")), .funs = therms_savings) %>% 
-#   select(-savings_kwh,
-#          -savings_therms,
-#          -base_population_start,
-#          -measure_limit,
-#          -measure_applicability,
-#          -delivery_type_proportion,
-#          -population_applicability) %>% 
-#   rename("cumulative_savings" = cumulative_installs) %>%
-#   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
-#   arrange(base_tech_name, efficient_tech_name, climate_zone)
 
 write.xlsx(as.data.frame(annual_technical_potential_therms), 
            "Potential_Model_Output_Tables/tech_potential_therms_savings.xlsx", 
@@ -306,4 +282,15 @@ lifetime_savings_therms_ROB <- bind_cols(select(lifetime_savings_therms_ROB, mea
 lifetime_savings_therms_ROB <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name),
                                   lifetime_savings_therms_ROB,
                                   by = "measure")
-
+# RET calculations
+RET_calculations <- list()
+for(year in current_year:RUL_year){
+  RET_calculations[[year]] <- mutate_at(filter(installs_per_year,delivery_type == "RET"),
+                                              vars(contains("installs")),
+                                              .funs = over_base_kwh_savings)
+}
+for(year in (RUL_year+1):project_until){
+  RET_calculations[[year]] <- mutate_at(filter(installs_per_year,delivery_type == "RET"),
+                                        vars(contains("installs")),
+                                        .funs = over_code_kwh_savings)
+}
