@@ -168,10 +168,13 @@ technical_potential <- merge(per_unit_savings_table,
                                     "climate_zone",
                                     "building_type",
                                     "delivery_type"))
+RUL <- 5
+RUL_year <- current_year + RUL
 
-
-kwh_savings <- function(installs) {
-  savings <- installs * technical_potential$savings_kwh
+## Attempting to create a conditional function, multiply number of installs by ROB savings if RUL elapses
+kwh_savings <- function(installs, year) {
+  if(year < RUL_year) savings <- installs * technical_potential$savings_kwh
+  else savings <- installs * filter(technical_potential, delivery_type == "ROB")
   return(savings)
 }
 
@@ -179,6 +182,7 @@ therms_savings <- function(installs) {
   savings <- installs * technical_potential$savings_therms
   return(savings)
 }
+
 
 technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
   select(-savings_kwh,
