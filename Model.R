@@ -266,24 +266,44 @@ RUL_year <- current_year + RUL
 
 ## Attempting to create a conditional function, multiply number of installs by ROB savings if RUL elapses
 
-lifetime_savings_kwh <- technical_potential_kwh %>% 
+# KWh
+lifetime_savings_kwh_ROB <- annual_technical_potential_kwh %>% 
   group_by(measure, delivery_type) %>%
-  summarise_at(vars_select(names(technical_potential_kwh), contains("savings_kwh")), sum)
+  summarise_at(vars_select(names(technical_potential_kwh), contains("savings_kwh")), sum) %>% 
+  filter(delivery_type == "ROB")
 
-lifetime_savings_kwh <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name), 
-                              lifetime_savings_kwh, 
-                              by = "measure") %>% distinct()
+cumulative <- integer(nrow(lifetime_savings_kwh_ROB))
 
+cumulative_func <- function(savings){
+  cumulative <<- cumulative + savings
+  return(cumulative)
+}
 
+temp <- tbl_df(apply(lifetime_savings_kwh_ROB[3:ncol(lifetime_savings_kwh_ROB)], 2, cumulative_func)) 
+names(temp) <- names(lifetime_savings_kwh_ROB[3:ncol(lifetime_savings_kwh_ROB)])
 
+lifetime_savings_kwh_ROB <- bind_cols(select(lifetime_savings_kwh_ROB, measure),
+                                  temp) 
 
-
-
-
-lifetime_savings_therms <- technical_potential_therms %>% 
+lifetime_savings_kwh_ROB <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name),
+                                  lifetime_savings_kwh_ROB,
+                                  by = "measure")
+                                  
+# Therms
+lifetime_savings_therms_ROB <- annual_technical_potential_therms %>% 
   group_by(measure, delivery_type) %>%
-  summarise_at(vars_select(names(technical_potential_therms), contains("savings_therms")), sum)
+  summarise_at(vars_select(names(technical_potential_therms), contains("savings_therms")), sum) %>% 
+  filter(delivery_type == "ROB")
 
-lifetime_savings_therms <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name), 
-                              lifetime_savings_therms, 
-                              by = "measure") %>% distinct()
+cumulative <- integer(nrow(lifetime_savings_therms_ROB))
+
+temp <- tbl_df(apply(lifetime_savings_therms_ROB[3:ncol(lifetime_savings_therms_ROB)], 2, cumulative_func)) 
+names(temp) <- names(lifetime_savings_therms_ROB[3:ncol(lifetime_savings_therms_ROB)])
+
+lifetime_savings_therms_ROB <- bind_cols(select(lifetime_savings_therms_ROB, measure),
+                                      temp) 
+
+lifetime_savings_therms_ROB <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name),
+                                  lifetime_savings_therms_ROB,
+                                  by = "measure")
+
