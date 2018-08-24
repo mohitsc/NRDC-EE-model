@@ -164,7 +164,8 @@ technical_potential <- merge(per_unit_savings_table,
                              by = c("base_tech_name", 
                                     "efficient_tech_name", 
                                     "climate_zone",
-                                    "building_type"))
+                                    "building_type")) %>% arrange(measure, climate_zone)
+
 RET_subset <- filter(technical_potential, delivery_type == "RET")
 ROB_subset <- filter(technical_potential, delivery_type == "ROB")
 
@@ -173,7 +174,7 @@ over_code_kwh_savings <- function(installs) {
   return(savings)
 }
 
-over_code_therm_savings <- function(installs) {
+over_code_therms_savings <- function(installs) {
   savings <- installs * per_unit_savings_table$savings_over_code_therms
   return(savings)
 }
@@ -189,42 +190,71 @@ over_base_therms_savings <- function(installs) {
 }
 
 annual_technical_potential_kwh <- rbind(mutate_at(ROB_subset, 
-                                                 vars(contains("installs")),
-                                                 .funs = over_code_kwh_savings),
-                                       mutate_at(RET_subset, 
-                                                 vars(contains("installs")), 
-                                                 .funs = over_base_kwh_savings))
-
-technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
-  select(-savings_kwh,
-         -savings_therms,
+                                                  vars(contains("installs")),
+                                                  .funs = over_code_kwh_savings),
+                                        mutate_at(RET_subset, 
+                                                  vars(contains("installs")), 
+                                                  .funs = over_base_kwh_savings)) %>% 
+  select(-savings_over_base_therms,
+         -savings_over_base_kwh,
+         -savings_over_code_therms,
+         -savings_over_code_kwh,
          -base_population_start,
          -measure_limit,
          -measure_applicability,
-         -delivery_type_proportion,
          -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
 
-write.xlsx(as.data.frame(technical_potential_kwh), 
+# technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
+#   select(-savings_kwh,
+#          -savings_therms,
+#          -base_population_start,
+#          -measure_limit,
+#          -measure_applicability,
+#          -delivery_type_proportion,
+#          -population_applicability) %>% 
+#   rename("cumulative_savings" = cumulative_installs) %>%
+#   rename_at(vars(contains("installs_")), funs(paste0("savings_kwh_", parse_number(.)))) %>% 
+#   arrange(base_tech_name, efficient_tech_name, climate_zone)
+
+write.xlsx(as.data.frame(annual_technical_potential_kwh), 
            "Potential_Model_Output_Tables/tech_potential_kwh_savings.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
 
-technical_potential_therms <- mutate_at(technical_potential, vars(contains("installs")), .funs = therms_savings) %>% 
-  select(-savings_kwh,
-         -savings_therms,
+annual_technical_potential_therms <- rbind(mutate_at(ROB_subset, 
+                                                  vars(contains("installs")),
+                                                  .funs = over_code_therms_savings),
+                                        mutate_at(RET_subset, 
+                                                  vars(contains("installs")), 
+                                                  .funs = over_base_therms_savings)) %>% 
+  select(-savings_over_base_therms,
+         -savings_over_base_kwh,
+         -savings_over_code_therms,
+         -savings_over_code_kwh,
          -base_population_start,
          -measure_limit,
          -measure_applicability,
-         -delivery_type_proportion,
          -population_applicability) %>% 
   rename("cumulative_savings" = cumulative_installs) %>%
   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
   arrange(base_tech_name, efficient_tech_name, climate_zone)
 
-write.xlsx(as.data.frame(technical_potential_therms), 
+# technical_potential_therms <- mutate_at(technical_potential, vars(contains("installs")), .funs = therms_savings) %>% 
+#   select(-savings_kwh,
+#          -savings_therms,
+#          -base_population_start,
+#          -measure_limit,
+#          -measure_applicability,
+#          -delivery_type_proportion,
+#          -population_applicability) %>% 
+#   rename("cumulative_savings" = cumulative_installs) %>%
+#   rename_at(vars(contains("installs_")), funs(paste0("savings_therms_", parse_number(.)))) %>% 
+#   arrange(base_tech_name, efficient_tech_name, climate_zone)
+
+write.xlsx(as.data.frame(annual_technical_potential_therms), 
            "Potential_Model_Output_Tables/tech_potential_therms_savings.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
