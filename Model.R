@@ -64,23 +64,21 @@ per_unit_savings_table <- merge(per_unit_savings_table,
          code_consumption_therms = base_consumption_therms.y)
 
 per_unit_savings_table <- per_unit_savings_table %>% 
-  mutate(savings_kwh = ifelse(delivery_type == "RET", 
-                              base_consumption_kwh - efficient_consumption_kwh, 
-                              code_consumption_kwh - efficient_consumption_kwh),
-         savings_therms = ifelse(delivery_type == "RET", 
-                                 base_consumption_therms - efficient_consumption_therms, 
-                                 code_consumption_therms - efficient_consumption_therms)) %>%
+  mutate(savings_over_base_kwh = base_consumption_kwh - efficient_consumption_kwh,
+         savings_over_code_kwh = code_consumption_kwh - efficient_consumption_kwh,
+         savings_over_base_therms = base_consumption_therms - efficient_consumption_therms,
+         savings_over_code_therms = code_consumption_therms - efficient_consumption_therms) %>%
   select(measure, 
          base_tech_name, 
          efficient_tech_name, 
-         delivery_type, 
          climate_zone,
          building_type,
          measure_applicability, 
          population_applicability,
-         delivery_type_proportion,
-         savings_kwh, 
-         savings_therms) %>% arrange(measure, climate_zone)
+         savings_over_base_kwh, 
+         savings_over_code_kwh,
+         savings_over_base_therms,
+         savings_over_code_therms) %>% arrange(measure, climate_zone) %>% distinct()
 
 
 # Stock Turnover Modeling-------------------------------------------------
@@ -108,10 +106,10 @@ tech_population <- mutate(tech_population,
          -saturation)
 
 
-savings_and_saturation_table <- merge(per_unit_savings_table, 
+savings_and_saturation_table <- merge(measure_table, 
                                       tech_population, 
-                                      by.x = c("base_tech_name", "climate_zone", "building_type"), 
-                                      by.y = c("tech_name", "climate_zone", "building_type"), 
+                                      by.x = c("base_tech_name", "building_type"), 
+                                      by.y = c("tech_name", "building_type"), 
                                       all.y = FALSE) %>% 
   mutate(measure_limit = measure_applicability * population_applicability * delivery_type_proportion * number_of_models)
 
@@ -166,19 +164,36 @@ technical_potential <- merge(per_unit_savings_table,
                              by = c("base_tech_name", 
                                     "efficient_tech_name", 
                                     "climate_zone",
-                                    "building_type",
-                                    "delivery_type"))
+                                    "building_type"))
+RET_subset <- filter(technical_potential, delivery_type == "RET")
+ROB_subset <- filter(technical_potential, delivery_type == "ROB")
 
-kwh_savings <- function(installs) {
-  savings <- installs * technical_potential$savings_kwh
+over_code_kwh_savings <- function(installs) {
+  savings <- installs * per_unit_savings_table$savings_over_code_kwh
   return(savings)
 }
 
-therms_savings <- function(installs) {
-  savings <- installs * technical_potential$savings_therms
+over_code_therm_savings <- function(installs) {
+  savings <- installs * per_unit_savings_table$savings_over_code_therms
   return(savings)
 }
 
+over_base_kwh_savings <- function(installs) {
+  savings <- installs * per_unit_savings_table$savings_over_base_kwh
+  return(savings)
+}
+
+over_base_therms_savings <- function(installs) {
+  savings <- installs * per_unit_savings_table$savings_over_base_therms
+  return(savings)
+}
+
+annual_technical_potential_kwh <- rbind(mutate_at(ROB_subset, 
+                                                 vars(contains("installs")),
+                                                 .funs = over_code_kwh_savings),
+                                       mutate_at(RET_subset, 
+                                                 vars(contains("installs")), 
+                                                 .funs = over_base_kwh_savings))
 
 technical_potential_kwh <- mutate_at(technical_potential, vars(contains("installs")), .funs = kwh_savings) %>% 
   select(-savings_kwh,
@@ -214,7 +229,7 @@ write.xlsx(as.data.frame(technical_potential_therms),
            row.names = FALSE,
            sheetName = "R_output")
 
-# Lifetime savings table
+# Lifetime savings table --------------------------------------------------------------------------------------
 
 RUL <- 5
 RUL_year <- current_year + RUL
@@ -228,6 +243,12 @@ lifetime_savings_kwh <- technical_potential_kwh %>%
 lifetime_savings_kwh <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name), 
                               lifetime_savings_kwh, 
                               by = "measure") %>% distinct()
+
+
+
+
+
+
 
 lifetime_savings_therms <- technical_potential_therms %>% 
   group_by(measure, delivery_type) %>%
