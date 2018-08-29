@@ -237,21 +237,42 @@ write.xlsx(as.data.frame(annual_technical_potential_therms),
            sheetName = "R_output")
 
 # Lifetime savings table by making list of lifetime savings dataframes
-
-lifetime_calculations <- list()
+cumulative_lifetime_kwh_savings <- select(installs_per_year,
+                                      base_tech_name:delivery_type,
+                                      EUL)
 for(year in (current_year+1):project_until){
+  cumulative_lifetime_kwh_savings <- bind_cols(cumulative_lifetime_kwh_savings,
+                                                          temp = rep.int(0, times = nrow(cumulative_lifetime_kwh_savings)))
+  names(cumulative_lifetime_kwh_savings)[names(cumulative_lifetime_kwh_savings) == "temp"] <- paste0("savings_kwh_",
+                                                                                             year)
+}
 
-  lifetime_calculations[[year]] <- select(installs_per_year,
-                                          base_tech_name:delivery_type,
-                                          EUL)
-  
-  installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(year))))
-  
-  savings_column <- ifelse()
 
+lifetime_kwh_calculations <- list()
+
+for(installs_year in (current_year+1):project_until){
+  
+  lifetime_kwh_calculations[[installs_year]] <- select(installs_per_year,
+                                                   base_tech_name:delivery_type,
+                                                   EUL)
+  
+  installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(installs_year))))
+  
+  for(savings_year in (current_year+1):project_until){
+    savings_column <- over_base_kwh_savings(installs_column)
+    names(savings_column) <- paste0("savings_kwh_", savings_year)
+    
+    lifetime_kwh_calculations[[installs_year]] <- bind_cols(lifetime_kwh_calculations[[installs_year]], 
+                                                            savings_column)
+    
+    #cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, .vars = vars(contains(as.character(savings_year))), .funs = funs(.+savings_column))
   }
+  
+}
 
- 
+
+
+
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
 # 
 # RUL <- 5
