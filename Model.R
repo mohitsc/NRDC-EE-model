@@ -258,14 +258,19 @@ for(installs_year in (current_year+1):project_until){
   
   installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(installs_year))))
   
-  for(savings_year in (current_year+1):project_until){
+  for(savings_year in installs_year:project_until){
     savings_column <- over_base_kwh_savings(installs_column)
     names(savings_column) <- paste0("savings_kwh_", savings_year)
     
     lifetime_kwh_calculations[[installs_year]] <- bind_cols(lifetime_kwh_calculations[[installs_year]], 
                                                             savings_column)
+    cumulative_adder <- function(column) {
+      return (column + savings_column[,1]) 
+    }
     
-    #cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, .vars = vars(contains(as.character(savings_year))), .funs = funs(.+savings_column))
+    cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, 
+                                                 .vars = vars(contains(as.character(savings_year))), 
+                                                 cumulative_adder)
   }
   
 }
