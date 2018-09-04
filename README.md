@@ -89,9 +89,10 @@ Regional Population table (if different from CA Title 24 climate zones)
 EUL  
 
 --------------------------------------------------------------------------------------------------------------------------------------
- 
-INCORPORATE SINGLE/MULTI FAMILY: CHECK DENSITY, SATURATION, LOCATION AND SIZE TABLES
-
+ Payback Model
+Merrian: referred to in Synapse Study
+ "The most comparable model I found was a Rheem 50-gallon tank with three times the efficiency of a standard water heater priced at $1,199 from Home Depot. I polled several utilities, contractors, and energy efficiency program implementers in California and the Pacific Northwest, and the average cost they gave was $2000 to $2600 for equipment, installation, and mark-up"
+https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy
 --------------------------------------------------------------------------------------------------------------------------------------
 
 Appliance Efficiency Appendix
