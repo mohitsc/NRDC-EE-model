@@ -10,6 +10,7 @@ library(ggplot2)
 library(xlsx)
 library(readr)
 library(tidyselect)
+library(readbulk)
 
 # PG Data Input -------------------------------------------------------------------------------------------------------
 pg_water_data <- read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx")
@@ -461,3 +462,70 @@ write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]),
            "Potential_Model_Input_Tables/saturation_input_data.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
+# Reading in TOU Rates from Pierre HPWH Flexibility Study
+TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/Hourly price schedules v13.xlsx", sheet = "R_input"))
+
+TOU_rates <- rename(TOU_rates,
+                    "1" = CZ1,
+                    "2" = CZ2,
+                    "3" = CZ3,
+                    "4" = CZ4,
+                    "5" = CZ5,
+                    "11" = CZ11,
+                    "12" = "CZ 12",
+                    "13" = "CZ 13")
+
+TOU_rates <- gather(TOU_rates,
+                    climate_zone,
+                    rate,
+                    "1":"13",
+                    -("8760":Hr))
+
+TOU_rates <- mutate(TOU_rates,
+                    hour = Hr + 1) 
+
+TOU_rates <- select(TOU_rates,
+                    climate_zone,
+                    season = Season,
+                    month = Month,
+                    day = Day,
+                    hour,
+                    rate)
+# Loadshape data from ECOTOPE Data --------------------------------------------------------------------------------------
+
+loadshapes <-  read_bulk(directory = "LoadShapes")
+
+loadshapes <- select(loadshapes,
+                     climate_zone,
+                     dayOfYear,
+                     hour,
+                     vars_select(names(loadshapes), contains("input")),
+                     standby_kWh,
+                     File)
+
+loadshapes <- loadshapes %>%
+  rowwise() %>%
+  mutate(input_kwh = sum(input_kWh1, 
+                         input_kWh2, 
+                         input_kWh3, 
+                         standby_kWh, 
+                         na.rm=TRUE)) %>%
+  select(-input_kWh1,
+         -input_kWh2,
+         -input_kWh3,
+         -standby_kWh)
+
+loadshapes <- loadshapes %>%  
+  mutate(tech_name = case_when(grepl("AO|Rheem", File) ~ "HPWH",
+                               grepl("res", File, ignore.case = TRUE) ~"electric_resistance")) %>%
+  select(-File)
+
+#Take average of AO Smith and Rheem to generate avg. HPWH consumption per hour per CZ
+loadshapes <- group_by(loadshapes,
+                       tech_name,
+                       climate_zone,
+                       dayOfYear,
+                       hour)
+
+loadshapes <- summarise(loadshapes, input_kwh = mean(input_kwh))
