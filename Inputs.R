@@ -478,7 +478,7 @@ TOU_rates <- rename(TOU_rates,
 
 TOU_rates <- gather(TOU_rates,
                     climate_zone,
-                    rate,
+                    NRDC_TOU_rate,
                     "1":"13",
                     -("8760":Hr))
 
@@ -491,14 +491,24 @@ TOU_rates <- select(TOU_rates,
                     month = Month,
                     day = Day,
                     hour,
-                    rate)
+                    NRDC_TOU_rate)
+
+months_days <- select(TOU_rates, month, day) %>% distinct() %>% mutate(day_of_year = row_number())
+TOU_rates <- merge(TOU_rates, months_days, by = c("month", "day"))
+
+TOU_rates <- select(TOU_rates, 
+                    climate_zone,
+                    season,
+                    day_of_year,
+                    hour,
+                    NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
 # Loadshape data from ECOTOPE Data --------------------------------------------------------------------------------------
 
 loadshapes <-  read_bulk(directory = "LoadShapes")
 
 loadshapes <- select(loadshapes,
                      climate_zone,
-                     dayOfYear,
+                     day_of_year = dayOfYear,
                      hour,
                      vars_select(names(loadshapes), contains("input")),
                      standby_kWh,
@@ -525,7 +535,7 @@ loadshapes <- loadshapes %>%
 loadshapes <- group_by(loadshapes,
                        tech_group,
                        climate_zone,
-                       dayOfYear,
+                       day_of_year,
                        hour)
 
 loadshapes <- summarise(loadshapes, input_kwh = mean(input_kwh))
