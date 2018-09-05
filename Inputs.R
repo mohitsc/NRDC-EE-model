@@ -517,15 +517,27 @@ loadshapes <- loadshapes %>%
          -standby_kWh)
 
 loadshapes <- loadshapes %>%  
-  mutate(tech_name = case_when(grepl("AO|Rheem", File) ~ "HPWH",
-                               grepl("res", File, ignore.case = TRUE) ~"electric_resistance")) %>%
+  mutate(tech_group = case_when(grepl("AO|Rheem", File) ~ "HPWH",
+                               grepl("res", File, ignore.case = TRUE) ~"Elec Water Heaters")) %>%
   select(-File)
 
 #Take average of AO Smith and Rheem to generate avg. HPWH consumption per hour per CZ
 loadshapes <- group_by(loadshapes,
-                       tech_name,
+                       tech_group,
                        climate_zone,
                        dayOfYear,
                        hour)
 
 loadshapes <- summarise(loadshapes, input_kwh = mean(input_kwh))
+
+annual_consumption_loadshape <- group_by(loadshapes,
+                               tech_group,
+                               climate_zone) %>% summarise(annual_input_kwh = sum(input_kwh))
+
+loadshapes <- merge(loadshapes, annual_consumption_loadshape, by = c("tech_group", "climate_zone"))
+
+loadshapes <- loadshapes %>% 
+  mutate(loadshape = input_kwh/annual_input_kwh) %>% 
+  select(-annual_input_kwh, 
+         -input_kwh)
+
