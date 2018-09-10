@@ -28,14 +28,15 @@ tech_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/tech_costs_table.x
 # Measure Table
 measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/sample_measure_table.xlsx", 
                                    sheet = "R_input"))
-#Consumption Table
+# Consumption Table
 consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consumption_table.xlsx", sheet = "R_input"))
 
 # 2018 Modeled saturation data
 saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/saturation_input_data.xlsx", 
                                          sheet = "R_input"))
 
-
+# Operational Costs
+operational_costs <- tbl_df(read_csv("Potential_Model_Input_Tables/operational_costs.csv"))
 
 # Per Unit Savings Table -----------------------------------------------------------
 

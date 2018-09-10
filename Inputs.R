@@ -11,6 +11,7 @@ library(xlsx)
 library(readr)
 library(tidyselect)
 library(readbulk)
+library(data.table)
 
 # PG Data Input -------------------------------------------------------------------------------------------------------
 pg_water_data <- read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx")
@@ -498,7 +499,6 @@ TOU_rates <- merge(TOU_rates, months_days, by = c("month", "day"))
 
 TOU_rates <- select(TOU_rates, 
                     climate_zone,
-                    season,
                     day_of_year,
                     hour,
                     NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
@@ -550,4 +550,13 @@ loadshapes <- loadshapes %>%
   mutate(loadshape = input_kwh/annual_input_kwh) %>% 
   select(-annual_input_kwh, 
          -input_kwh)
+
+# Operational Costs for each year operations
+operational_costs <- merge(loadshapes, TOU_rates, by = c("climate_zone", "day_of_year", "hour"))
+operational_costs <- operational_costs %>% mutate(hourly_cost = NRDC_TOU_rate * loadshape)
+operational_costs <- operational_costs %>% arrange(climate_zone, tech_group, day_of_year, hour)
+
+fwrite(as.data.frame(operational_costs), 
+       "Potential_Model_Input_Tables/operational_costs.csv", 
+       row.names = FALSE)
 
