@@ -276,6 +276,72 @@ for(installs_year in (current_year+1):project_until){
   
 }
 
+# incremental first year costs -------------------------------------------------------------------------------
+# RET costs pre RUL = efficient costs
+first_year_savings_RET_pre_RUL <- merge(select(technology_list, tech_name, costs), 
+                                        filter(measure_table, delivery_type == "RET"),
+                                        by.x = "tech_name",
+                                        by.y = "efficient_tech_name") %>% 
+  rename("efficient_tech_name" = tech_name)
+
+# RET costs pre RUL = efficient costs - code costs
+first_year_savings_RET_post_RUL <- merge(select(technology_list, tech_name, costs), 
+                                         filter(measure_table, delivery_type == "RET"),
+                                         by.x = "tech_name",
+                                         by.y = "efficient_tech_name") %>% 
+  rename("efficient_costs" = costs,
+         "efficient_tech_name" = tech_name)
+
+first_year_savings_RET_post_RUL <- bind_cols(first_year_savings_RET_post_RUL,
+                                             select(merge(select(technology_list, tech_name, costs), 
+                                                          filter(measure_table, delivery_type == "RET"),
+                                                          by.x = "tech_name",
+                                                          by.y = "code_tech_name"), 
+                                                    "costs")) %>% 
+  rename("code_costs" = costs)
+
+first_year_savings_RET_post_RUL <- first_year_savings_RET_post_RUL %>% 
+  mutate(costs = efficient_costs - code_costs) %>%
+  select(base_tech_name,
+         code_tech_name,
+         efficient_tech_name,
+         delivery_type,
+         building_type,
+         costs)
+first_year_savings_RET_pre_RUL <- first_year_savings_RET_pre_RUL %>% 
+  select(base_tech_name,
+         code_tech_name,
+         efficient_tech_name,
+         delivery_type,
+         building_type,
+         costs)
+
+# ROB costs = efficient costs - code costs
+
+first_year_savings_ROB <- merge(select(technology_list, tech_name, costs), 
+                                                                   filter(measure_table, delivery_type == "ROB"),
+                                                                   by.x = "tech_name",
+                                                                   by.y = "efficient_tech_name") %>% 
+  rename("efficient_costs" = costs,
+         "efficient_tech_name" = tech_name)
+
+first_year_savings_ROB <- bind_cols(first_year_savings_ROB,
+                                             select(merge(select(technology_list, tech_name, costs), 
+                                                          filter(measure_table, delivery_type == "ROB"),
+                                                          by.x = "tech_name",
+                                                          by.y = "code_tech_name"), 
+                                                    "costs")) %>% 
+  rename("code_costs" = costs)
+
+first_year_savings_ROB <- first_year_savings_ROB %>% 
+  mutate(costs = efficient_costs - code_costs) %>%
+  select(base_tech_name,
+         code_tech_name,
+         efficient_tech_name,
+         delivery_type,
+         building_type,
+         costs)
+
 
 
 
