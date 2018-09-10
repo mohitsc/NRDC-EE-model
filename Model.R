@@ -419,6 +419,19 @@ first_year_costs <- rbind(select(first_year_costs_ROB,
 first_year_costs <- first_year_costs %>% 
   mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
 
+# Operational cost savings -------------------------------------------------------------------------------
+operational_savings_elec <- rbind(merge(filter(select(technology_list, tech_group, tech_name), 
+                                          !grepl("GE 2014", tech_name)),
+                                   filter(select(operational_costs, -loadshape, -NRDC_TOU_rate),
+                                          tech_group == "Elec Water Heaters"),  
+                                   by.x = "tech_group", 
+                                   by.y = "tech_group"))
+
+operational_savings_HPWH <- bind_cols(filter(select(technology_list, tech_name), 
+                                          grepl("GE 2014", tech_name)),
+                                   filter(select(operational_costs, -loadshape, -NRDC_TOU_rate),
+                                          tech_group == "HPWH"))
+
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
 # 
 # RUL <- 5
