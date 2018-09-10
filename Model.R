@@ -8,6 +8,8 @@ library(ggplot2)
 library(xlsx)
 library(readr)
 library(tidyselect)
+library(readbulk)
+library(data.table)
 
 # Inputs ------------------------------------------------------------------
 # Climate Zones
@@ -278,21 +280,21 @@ for(installs_year in (current_year+1):project_until){
 
 # incremental first year costs -------------------------------------------------------------------------------
 # RET costs pre RUL = efficient costs
-first_year_savings_RET_pre_RUL <- merge(select(technology_list, tech_name, costs), 
+first_year_costs_RET_pre_RUL <- merge(select(technology_list, tech_name, costs), 
                                         filter(measure_table, delivery_type == "RET"),
                                         by.x = "tech_name",
                                         by.y = "efficient_tech_name") %>% 
   rename("efficient_tech_name" = tech_name)
 
 # RET costs pre RUL = efficient costs - code costs
-first_year_savings_RET_post_RUL <- merge(select(technology_list, tech_name, costs), 
+first_year_costs_RET_post_RUL <- merge(select(technology_list, tech_name, costs), 
                                          filter(measure_table, delivery_type == "RET"),
                                          by.x = "tech_name",
                                          by.y = "efficient_tech_name") %>% 
   rename("efficient_costs" = costs,
          "efficient_tech_name" = tech_name)
 
-first_year_savings_RET_post_RUL <- bind_cols(first_year_savings_RET_post_RUL,
+first_year_costs_RET_post_RUL <- bind_cols(first_year_costs_RET_post_RUL,
                                              select(merge(select(technology_list, tech_name, costs), 
                                                           filter(measure_table, delivery_type == "RET"),
                                                           by.x = "tech_name",
@@ -300,7 +302,7 @@ first_year_savings_RET_post_RUL <- bind_cols(first_year_savings_RET_post_RUL,
                                                     "costs")) %>% 
   rename("code_costs" = costs)
 
-first_year_savings_RET_post_RUL <- first_year_savings_RET_post_RUL %>% 
+first_year_costs_RET_post_RUL <- first_year_costs_RET_post_RUL %>% 
   mutate(costs = efficient_costs - code_costs) %>%
   select(base_tech_name,
          code_tech_name,
@@ -308,7 +310,7 @@ first_year_savings_RET_post_RUL <- first_year_savings_RET_post_RUL %>%
          delivery_type,
          building_type,
          costs)
-first_year_savings_RET_pre_RUL <- first_year_savings_RET_pre_RUL %>% 
+first_year_costs_RET_pre_RUL <- first_year_costs_RET_pre_RUL %>% 
   select(base_tech_name,
          code_tech_name,
          efficient_tech_name,
@@ -318,14 +320,14 @@ first_year_savings_RET_pre_RUL <- first_year_savings_RET_pre_RUL %>%
 
 # ROB costs = efficient costs - code costs
 
-first_year_savings_ROB <- merge(select(technology_list, tech_name, costs), 
+first_year_costs_ROB <- merge(select(technology_list, tech_name, costs), 
                                                                    filter(measure_table, delivery_type == "ROB"),
                                                                    by.x = "tech_name",
                                                                    by.y = "efficient_tech_name") %>% 
   rename("efficient_costs" = costs,
          "efficient_tech_name" = tech_name)
 
-first_year_savings_ROB <- bind_cols(first_year_savings_ROB,
+first_year_costs_ROB <- bind_cols(first_year_costs_ROB,
                                              select(merge(select(technology_list, tech_name, costs), 
                                                           filter(measure_table, delivery_type == "ROB"),
                                                           by.x = "tech_name",
@@ -333,7 +335,7 @@ first_year_savings_ROB <- bind_cols(first_year_savings_ROB,
                                                     "costs")) %>% 
   rename("code_costs" = costs)
 
-first_year_savings_ROB <- first_year_savings_ROB %>% 
+first_year_costs_ROB <- first_year_costs_ROB %>% 
   mutate(costs = efficient_costs - code_costs) %>%
   select(base_tech_name,
          code_tech_name,
@@ -342,8 +344,80 @@ first_year_savings_ROB <- first_year_savings_ROB %>%
          building_type,
          costs)
 
+RET_subset <- filter(technical_potential, delivery_type == "RET")
+ROB_subset <- filter(technical_potential, delivery_type == "ROB")
+
+#adding ROB costs column
+first_year_costs_ROB <- merge(select(ROB_subset, 
+                                       base_tech_name, 
+                                       efficient_tech_name, 
+                                       climate_zone, 
+                                       delivery_type, 
+                                       building_type,
+                                       vars_select(names(installs_per_year), contains("installs"))),
+                                first_year_costs_ROB,
+                                by = c("base_tech_name", 
+                                       "efficient_tech_name", 
+                                       "delivery_type", 
+                                       "building_type"))
+                                
+first_year_costs_ROB <- mutate_at(first_year_costs_ROB, 
+                                    vars(contains("installs")), 
+                                    funs(. * costs)) 
+
+first_year_costs_ROB <- rename_at(first_year_costs_ROB,
+                                    vars(contains("installs_")), 
+                                    funs(paste0("costs_", parse_number(.)))) %>%
+  rename("cumulative_costs" = cumulative_installs)
+
+#adding pre and post RUL cost columns
+
+first_year_costs_RET_pre_RUL <- merge(select(RET_subset, 
+                                       base_tech_name, 
+                                       efficient_tech_name, 
+                                       climate_zone, 
+                                       delivery_type, 
+                                       building_type,
+                                       vars_select(names(installs_per_year), contains("installs"))),
+                                first_year_costs_RET_pre_RUL,
+                                by = c("base_tech_name", 
+                                       "efficient_tech_name", 
+                                       "delivery_type", 
+                                       "building_type")) %>%
+  rename("pre_RUL_costs" = costs)
+
+first_year_costs_RET <- merge(first_year_costs_RET_pre_RUL,
+                                        first_year_costs_RET_post_RUL,
+                                        by = c("base_tech_name",
+                                               "code_tech_name",
+                                               "efficient_tech_name", 
+                                               "delivery_type", 
+                                               "building_type")) %>%
+  rename("post_RUL_costs" = costs)
+
+rm(first_year_costs_RET_post_RUL, first_year_costs_RET_pre_RUL)
 
 
+first_year_costs_RET <- mutate_at(first_year_costs_RET, 
+                                    vars(matches("installs_[2019:2022]")), 
+                                    funs(. * pre_RUL_costs))
+first_year_costs_RET <- mutate_at(first_year_costs_RET, 
+                                    vars(matches("installs_[2023:2030]")), 
+                                    funs(. * post_RUL_costs))
+
+first_year_costs_RET <- rename_at(first_year_costs_RET,
+                                    vars(contains("installs_")), 
+                                    funs(paste0("costs_", parse_number(.)))) %>%
+  rename("cumulative_costs" = cumulative_installs)
+
+first_year_costs <- rbind(select(first_year_costs_ROB,
+                                 -costs),
+                          select(first_year_costs_RET,
+                                 -post_RUL_costs, 
+                                 -pre_RUL_costs))
+
+first_year_costs <- first_year_costs %>% 
+  mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
 
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
 # 
