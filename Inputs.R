@@ -492,6 +492,7 @@ TOU_rates <- select(TOU_rates,
                     month = Month,
                     day = Day,
                     hour,
+                    hour_of_year = "8760",
                     NRDC_TOU_rate)
 
 months_days <- select(TOU_rates, month, day) %>% distinct() %>% mutate(day_of_year = row_number())
@@ -501,7 +502,13 @@ TOU_rates <- select(TOU_rates,
                     climate_zone,
                     day_of_year,
                     hour,
+                    hour_of_year,
                     NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
+
+fwrite(as.data.frame(TOU_rates), 
+       "Input_to_Input_Tables/TOU_rates.csv", 
+       row.names = FALSE)
+
 # Loadshape data from ECOTOPE Data --------------------------------------------------------------------------------------
 
 loadshapes <-  read_bulk(directory = "LoadShapes")
@@ -527,13 +534,13 @@ loadshapes <- loadshapes %>%
          -standby_kWh)
 
 loadshapes <- loadshapes %>%  
-  mutate(tech_group = case_when(grepl("AO|Rheem", File) ~ "HPWH",
-                               grepl("res", File, ignore.case = TRUE) ~"Elec Water Heaters")) %>%
+  mutate(loadshape_label = case_when(grepl("AO|Rheem", File) ~ "HP_water_heating",
+                               grepl("res", File, ignore.case = TRUE) ~"elec_gas_water_heating")) %>%
   select(-File)
 
 #Take average of AO Smith and Rheem to generate avg. HPWH consumption per hour per CZ
 loadshapes <- group_by(loadshapes,
-                       tech_group,
+                       loadshape_label,
                        climate_zone,
                        day_of_year,
                        hour)
@@ -541,15 +548,16 @@ loadshapes <- group_by(loadshapes,
 loadshapes <- summarise(loadshapes, input_kwh = mean(input_kwh))
 
 annual_consumption_loadshape <- group_by(loadshapes,
-                               tech_group,
+                               loadshape_label,
                                climate_zone) %>% summarise(annual_input_kwh = sum(input_kwh))
 
-loadshapes <- merge(loadshapes, annual_consumption_loadshape, by = c("tech_group", "climate_zone"))
+loadshapes <- merge(loadshapes, annual_consumption_loadshape, by = c("loadshape_label", "climate_zone"))
 
 loadshapes <- loadshapes %>% 
   mutate(loadshape = input_kwh/annual_input_kwh) %>% 
   select(-annual_input_kwh, 
          -input_kwh)
+
 
 # Operational Costs for each year operations
 operational_costs <- merge(loadshapes, TOU_rates, by = c("climate_zone", "day_of_year", "hour"))
