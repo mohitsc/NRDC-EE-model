@@ -93,6 +93,17 @@ EUL
 Merrian: referred to in Synapse Study
  "The most comparable model I found was a Rheem 50-gallon tank with three times the efficiency of a standard water heater priced at $1,199 from Home Depot. I polled several utilities, contractors, and energy efficiency program implementers in California and the Pacific Northwest, and the average cost they gave was $2000 to $2600 for equipment, installation, and mark-up"
 https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy
+
+https://www.pge.com/tariffs/assets/pdf/tariffbook/GAS_SCHEDS_G-1.pdf
+gas rates for CZs uses utility tariff data
+
+TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
+Using CZ 5 data for CZ 6:10, 14:15,
+CZ 1 data for CZ 16
+Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
+
+Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
+
 --------------------------------------------------------------------------------------------------------------------------------------
 
 Appliance Efficiency Appendix
