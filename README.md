@@ -96,10 +96,15 @@ https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-c
 
 https://www.pge.com/tariffs/assets/pdf/tariffbook/GAS_SCHEDS_G-1.pdf
 https://www.socalgas.com/regulatory/tariffs/tm2/pdf/GR.pdf
+https://scgenvoy.sempra.com/ebb/attachments/1517593864442_SDG&E_AL_2647-G.pdf
 
-gas rates for CZs uses utility tariff data, using just baseline residential data
+gas rates for CZs uses utility tariff data, using just baseline residential data  
 PGE: $1.19035 
 SCG: $0.90410
+SDGE: $1.2142  
+mapping utilities to climzte zones:
+http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf
+https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf  
 
 TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
 Using CZ 5 data for CZ 6:10, 14:15,
