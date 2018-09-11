@@ -95,7 +95,11 @@ Merrian: referred to in Synapse Study
 https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy
 
 https://www.pge.com/tariffs/assets/pdf/tariffbook/GAS_SCHEDS_G-1.pdf
-gas rates for CZs uses utility tariff data
+https://www.socalgas.com/regulatory/tariffs/tm2/pdf/GR.pdf
+
+gas rates for CZs uses utility tariff data, using just baseline residential data
+PGE: $1.19035 
+SCG: $0.90410
 
 TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
 Using CZ 5 data for CZ 6:10, 14:15,
