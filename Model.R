@@ -400,10 +400,10 @@ total_first_year_costs <- total_first_year_costs %>%
   mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
 
 
-# Operational cost savings -------------------------------------------------------------------------------
-operational_savings <- merge(select(technology_list, tech_name, loadshape), 
-                                  select(operational_costs, -loadshape, -NRDC_TOU_rate),
-                                  by = "tech_name")
+# Operational cost savings for years between 2019 and 2030-------------------------------------------------------------------------------
+
+discount_rate <- 0.03
+
 
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
 # 

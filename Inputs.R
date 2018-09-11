@@ -473,14 +473,22 @@ TOU_rates <- rename(TOU_rates,
                     "3" = CZ3,
                     "4" = CZ4,
                     "5" = CZ5,
+                    "6" = CZ6,
+                    "7" = CZ7,
+                    "8" = CZ8,
+                    "9" = CZ9,
+                    "10" = CZ10,
                     "11" = CZ11,
-                    "12" = "CZ 12",
-                    "13" = "CZ 13")
+                    "12" = CZ12,
+                    "13" = CZ13,
+                    "14" = CZ14,
+                    "15" = CZ15,
+                    "16" = CZ16)
 
 TOU_rates <- gather(TOU_rates,
                     climate_zone,
                     NRDC_TOU_rate,
-                    "1":"13",
+                    "1":"16",
                     -("8760":Hr))
 
 TOU_rates <- mutate(TOU_rates,
@@ -505,8 +513,14 @@ TOU_rates <- select(TOU_rates,
                     hour_of_year,
                     NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
 
+#import gas rates for each climate zone
+gas_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx"))
+
+rates <- merge(TOU_rates,
+           select(gas_rates, climate_zone, gas_rate = rate))
+
 fwrite(as.data.frame(TOU_rates), 
-       "Input_to_Input_Tables/TOU_rates.csv", 
+       "Input_to_Input_Tables/rates.csv", 
        row.names = FALSE)
 
 # Loadshape data from ECOTOPE Data --------------------------------------------------------------------------------------
@@ -557,12 +571,36 @@ loadshapes <- loadshapes %>%
   mutate(loadshape = input_kwh/annual_input_kwh) %>% 
   select(-annual_input_kwh, 
          -input_kwh)
-
+ 
 
 # Operational Costs for each year operations
-operational_costs <- merge(loadshapes, TOU_rates, by = c("climate_zone", "day_of_year", "hour"))
-operational_costs <- operational_costs %>% mutate(hourly_cost = NRDC_TOU_rate * loadshape)
-operational_costs <- operational_costs %>% arrange(climate_zone, tech_group, day_of_year, hour)
+#merging loadshape with rates
+operational_costs <- merge(loadshapes, rates, by = c("climate_zone", "day_of_year", "hour")) %>%
+  arrange(climate_zone, loadshape_label, hour_of_year)
+
+#merging with tech_names
+operational_costs <- merge(operational_costs, 
+                           select(technology_list, tech_name, tech_group, loadshape_label),
+                           by = "loadshape_label")
+#merging with consumption
+operational_costs <- merge(operational_costs,
+                           consumption_table,
+                           by = c("tech_name", "climate_zone"))
+
+operational_costs <- operational_costs %>% mutate(hourly_cost = ifelse(tech_group == "Elec Water Heaters",
+                                                                       NRDC_TOU_rate * loadshape * base_consumption_kwh,
+                                                                       gas_rate * loadshape * base_consumption_therms))
+
+operational_costs <- operational_costs %>% 
+  select(tech_name,
+         climate_zone,
+         hour_of_year,
+         loadshape_label,
+         building_type,
+         hourly_cost) %>% 
+  arrange(tech_name,
+          climate_zone,
+          hour_of_year)
 
 fwrite(as.data.frame(operational_costs), 
        "Potential_Model_Input_Tables/operational_costs.csv", 
