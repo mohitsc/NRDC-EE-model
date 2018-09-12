@@ -106,6 +106,7 @@ mapping utilities to climate zones:
 http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf  
 https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf  
 https://www.energy.ca.gov/maps/serviceareas/CA_Electric_Investor_Owned_Utilities_IOUs.pdf  
+https://www.energy.ca.gov/maps/serviceareas/Electric_Utility_Service_Areas.pdf  
 
 TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
 Using CZ 5 data for CZ 6:10, 14:15,
