@@ -114,12 +114,16 @@ CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
 
 Regular Electricity rates: climate zone to utility mapping excel file title is "climate_zone_rate_mapping"  
-PGE: https://www.pge.com/tariffs/electric.shtml  
-SDGE: https://www.sdge.com/sites/default/files/regulatory/7-1-18%20Schedule%20DR%20Total%20Rates%20Table.pdf  
-SCE: https://www.sce.com/NR/sc3/tm2/pdf/ce12-12.pdf  
-IID: climate zone 15 is avg of all other climate zones  
 CZ 13, 16: avg of PGE and SCE
 CZ 14: 20% SDGE, 80% SCE  
+Using IEPR 2017 forecast tables for each utility, 2016 to 2030 estimated growth rates: http://www.energy.ca.gov/2017_energypolicy/documents/2018-02-21_business_meeting/2018-02-21_middemandcase_forecst.php    
+
+IID: 1.21%  
+PGE: 0.61%  
+SCE: 0.67%  
+SDGE: 1.06%  
+
+
 
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
 
