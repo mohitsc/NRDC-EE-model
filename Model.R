@@ -38,7 +38,7 @@ saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/saturation_i
                                          sheet = "R_input"))
 
 # Operational Costs
-operational_costs <- tbl_df(read_csv("Potential_Model_Input_Tables/operational_costs.csv"))
+annual_operational_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/annual_operational_costs.xlsx"))
 
 # Per Unit Savings Table -----------------------------------------------------------
 
@@ -402,7 +402,59 @@ total_first_year_costs <- total_first_year_costs %>%
 
 # Operational cost savings for years between 2019 and 2030-------------------------------------------------------------------------------
 
+#discounted future costs = costs/(1+r)^n
 discount_rate <- 0.03
+#increase in rates each year by 2.5%, arbitrary value (look at rate history and regress)
+rate_increase_factor <- 1.025 
+
+operational_cost_savings <- merge(select(measure_table, base_tech_name:delivery_type, building_type), 
+                                  annual_operational_costs, 
+                                  by.x = c("base_tech_name", "building_type"), 
+                                  by.y = c("tech_name", "building_type")) %>%
+  rename("base_opr_costs" = opr_costs)
+
+operational_cost_savings <- merge(operational_cost_savings, 
+                                  annual_operational_costs, 
+                                  by.x = c("efficient_tech_name", "building_type", "climate_zone"), 
+                                  by.y = c("tech_name", "building_type", "climate_zone")) %>%
+  rename("efficient_opr_costs" = opr_costs)
+
+operational_cost_savings <- merge(operational_cost_savings, 
+                                  annual_operational_costs, 
+                                  by.x = c("code_tech_name", "building_type", "climate_zone"), 
+                                  by.y = c("tech_name", "building_type", "climate_zone")) %>%
+  rename("code_opr_costs" = opr_costs)
+
+
+operational_cost_savings <- operational_cost_savings %>%
+  select(base_tech_name,
+         code_tech_name,
+         efficient_tech_name,
+         climate_zone,
+         delivery_type,
+         building_type,
+         base_opr_costs,
+         code_opr_costs,
+         efficient_opr_costs)
+
+write.xlsx(as.data.frame(operational_cost_savings), 
+           "Potential_Model_Output_Tables/2019_operational_costs.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
+
+names(annual_operational_costs)[names(annual_operational_costs) == "opr_costs"] <- paste0("opr_costs_",
+                                                                                          (current_year+1))
+
+
+#YEARWISE OPR COST SAVINGS FRAMEWORK
+for(year in (current_year+2):project_until){
+  installs_per_year <- bind_cols(installs_per_year, 
+                                 temp = ifelse((installs_per_year$cumulative_installs + installs_per_year$measure_limit/installs_per_year$EUL) <= installs_per_year$measure_limit, 
+                                               installs_per_year$measure_limit/installs_per_year$EUL,
+                                               installs_per_year$measure_limit - installs_per_year$cumulative_installs))
+  
+  names(installs_per_year)[names(installs_per_year) == "temp"] <- paste0("installs_", year)
+}
 
 
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------

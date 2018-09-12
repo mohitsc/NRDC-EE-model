@@ -519,7 +519,7 @@ gas_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.
 rates <- merge(TOU_rates,
            select(gas_rates, climate_zone, gas_rate = rate))
 
-fwrite(as.data.frame(TOU_rates), 
+fwrite(as.data.frame(rates), 
        "Input_to_Input_Tables/rates.csv", 
        row.names = FALSE)
 
@@ -572,6 +572,9 @@ loadshapes <- loadshapes %>%
   select(-annual_input_kwh, 
          -input_kwh)
  
+fwrite(as.data.frame(loadshapes), 
+       "Input_to_Input_Tables/rates.csv", 
+       row.names = FALSE)
 
 # Operational Costs for each year operations
 #merging loadshape with rates
@@ -603,6 +606,15 @@ operational_costs <- operational_costs %>%
           hour_of_year)
 
 fwrite(as.data.frame(operational_costs), 
-       "Potential_Model_Input_Tables/operational_costs.csv", 
+       "Potential_Model_Input_Tables/operational_costs_8760_hours.csv", 
        row.names = FALSE)
 
+annual_operational_costs <- operational_costs %>% 
+  group_by(tech_name, climate_zone, building_type)
+
+annual_operational_costs <- summarise(annual_operational_costs, opr_costs = sum(hourly_cost))
+
+write.xlsx(as.data.frame(annual_operational_costs), 
+           "Potential_Model_Input_Tables/annual_operational_costs.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_input")
