@@ -363,6 +363,7 @@ first_year_costs_ROB <- first_year_costs_ROB %>%
          first_year_incremental_cost = costs)
 
 first_year_costs <- rbind(first_year_costs_ROB, first_year_costs_RET)
+rm(first_year_costs_RET, first_year_costs_ROB)
 
 write.xlsx(as.data.frame(first_year_costs), 
            "Potential_Model_Output_Tables/first_year_costs.xlsx", 

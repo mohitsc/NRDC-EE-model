@@ -505,6 +505,8 @@ TOU_rates <- select(TOU_rates,
 
 months_days <- select(TOU_rates, month, day) %>% distinct() %>% mutate(day_of_year = row_number())
 TOU_rates <- merge(TOU_rates, months_days, by = c("month", "day"))
+rm(months_days)
+
 
 TOU_rates <- select(TOU_rates, 
                     climate_zone,
@@ -518,6 +520,8 @@ gas_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.
 
 rates <- merge(TOU_rates,
            select(gas_rates, climate_zone, gas_rate = rate))
+
+rm(TOU_rates)
 
 fwrite(as.data.frame(rates), 
        "Input_to_Input_Tables/rates.csv", 
@@ -578,23 +582,23 @@ fwrite(as.data.frame(loadshapes),
 
 # Operational Costs for each year operations
 #merging loadshape with rates
-operational_costs <- merge(loadshapes, rates, by = c("climate_zone", "day_of_year", "hour")) %>%
+operational_costs_8760 <- merge(loadshapes, rates, by = c("climate_zone", "day_of_year", "hour")) %>%
   arrange(climate_zone, loadshape_label, hour_of_year)
 
 #merging with tech_names
-operational_costs <- merge(operational_costs, 
+operational_costs_8760 <- merge(operational_costs_8760, 
                            select(technology_list, tech_name, tech_group, loadshape_label),
                            by = "loadshape_label")
 #merging with consumption
-operational_costs <- merge(operational_costs,
+operational_costs_8760 <- merge(operational_costs_8760,
                            consumption_table,
                            by = c("tech_name", "climate_zone"))
 
-operational_costs <- operational_costs %>% mutate(hourly_cost = ifelse(tech_group == "Elec Water Heaters",
+operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost = ifelse(tech_group == "Elec Water Heaters",
                                                                        NRDC_TOU_rate * loadshape * base_consumption_kwh,
                                                                        gas_rate * loadshape * base_consumption_therms))
 
-operational_costs <- operational_costs %>% 
+operational_costs_8760 <- operational_costs_8760 %>% 
   select(tech_name,
          climate_zone,
          hour_of_year,
@@ -605,11 +609,11 @@ operational_costs <- operational_costs %>%
           climate_zone,
           hour_of_year)
 
-fwrite(as.data.frame(operational_costs), 
+fwrite(as.data.frame(operational_costs_8760), 
        "Potential_Model_Input_Tables/operational_costs_8760_hours.csv", 
        row.names = FALSE)
 
-annual_operational_costs <- operational_costs %>% 
+annual_operational_costs <- operational_costs_8760 %>% 
   group_by(tech_name, climate_zone, building_type)
 
 annual_operational_costs <- summarise(annual_operational_costs, opr_costs = sum(hourly_cost))
