@@ -412,19 +412,22 @@ operational_cost_savings <- merge(select(measure_table, base_tech_name:delivery_
                                   annual_operational_costs, 
                                   by.x = c("base_tech_name", "building_type"), 
                                   by.y = c("tech_name", "building_type")) %>%
-  rename("base_opr_costs" = opr_costs)
+  rename("base_opr_costs_TOU" = opr_costs_TOU,
+         "base_opr_costs_non_TOU" = opr_costs_non_TOU)
 
 operational_cost_savings <- merge(operational_cost_savings, 
                                   annual_operational_costs, 
                                   by.x = c("efficient_tech_name", "building_type", "climate_zone"), 
                                   by.y = c("tech_name", "building_type", "climate_zone")) %>%
-  rename("efficient_opr_costs" = opr_costs)
+  rename("efficient_opr_costs_TOU" = opr_costs_TOU,
+         "efficient_opr_costs_non_TOU" = opr_costs_non_TOU)
 
 operational_cost_savings <- merge(operational_cost_savings, 
                                   annual_operational_costs, 
                                   by.x = c("code_tech_name", "building_type", "climate_zone"), 
                                   by.y = c("tech_name", "building_type", "climate_zone")) %>%
-  rename("code_opr_costs" = opr_costs)
+  rename("code_opr_costs_TOU" = opr_costs_TOU,
+         "code_opr_costs_non_TOU" = opr_costs_non_TOU)
 
 
 operational_cost_savings <- operational_cost_savings %>%
@@ -434,14 +437,20 @@ operational_cost_savings <- operational_cost_savings %>%
          climate_zone,
          delivery_type,
          building_type,
-         base_opr_costs,
-         code_opr_costs,
-         efficient_opr_costs)
+         base_opr_costs_TOU,
+         code_opr_costs_TOU,
+         efficient_opr_costs_TOU,
+         base_opr_costs_non_TOU,
+         code_opr_costs_non_TOU,
+         efficient_opr_costs_non_TOU)
 
 write.xlsx(as.data.frame(operational_cost_savings), 
            "Potential_Model_Output_Tables/2019_operational_costs.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
+
+
+
 
 names(annual_operational_costs)[names(annual_operational_costs) == "opr_costs"] <- paste0("opr_costs_",
                                                                                           (current_year+1))

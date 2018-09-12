@@ -516,12 +516,12 @@ TOU_rates <- select(TOU_rates,
                     NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
 
 #import gas rates for each climate zone
-gas_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx"))
+gas_and_non_TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx"))
 
-rates <- merge(TOU_rates,
-           select(gas_rates, climate_zone, gas_rate = rate))
+rates <- merge(TOU_rates, gas_and_non_TOU_rates, 
+           by = "climate_zone")
 
-rm(TOU_rates)
+rm(TOU_rates, gas_and_non_TOU_rates)
 
 fwrite(as.data.frame(rates), 
        "Input_to_Input_Tables/rates.csv", 
@@ -577,7 +577,7 @@ loadshapes <- loadshapes %>%
          -input_kwh)
  
 fwrite(as.data.frame(loadshapes), 
-       "Input_to_Input_Tables/rates.csv", 
+       "Input_to_Input_Tables/loadshapes.csv", 
        row.names = FALSE)
 
 # Operational Costs for each year operations
@@ -594,9 +594,12 @@ operational_costs_8760 <- merge(operational_costs_8760,
                            consumption_table,
                            by = c("tech_name", "climate_zone"))
 
-operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost = ifelse(tech_group == "Elec Water Heaters",
+operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_TOU = ifelse(tech_group == "Elec Water Heaters",
                                                                        NRDC_TOU_rate * loadshape * base_consumption_kwh,
-                                                                       gas_rate * loadshape * base_consumption_therms))
+                                                                       0))
+operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_non_TOU = ifelse(tech_group == "Elec Water Heaters",
+                                                                                     electric_rate * loadshape * base_consumption_kwh,
+                                                                                     gas_rate * loadshape * base_consumption_therms))
 
 operational_costs_8760 <- operational_costs_8760 %>% 
   select(tech_name,
@@ -604,7 +607,8 @@ operational_costs_8760 <- operational_costs_8760 %>%
          hour_of_year,
          loadshape_label,
          building_type,
-         hourly_cost) %>% 
+         hourly_cost_TOU,
+         hourly_cost_non_TOU) %>% 
   arrange(tech_name,
           climate_zone,
           hour_of_year)
@@ -616,9 +620,15 @@ fwrite(as.data.frame(operational_costs_8760),
 annual_operational_costs <- operational_costs_8760 %>% 
   group_by(tech_name, climate_zone, building_type)
 
-annual_operational_costs <- summarise(annual_operational_costs, opr_costs = sum(hourly_cost))
+annual_operational_costs <- summarise(annual_operational_costs, 
+                                      opr_costs_TOU = sum(hourly_cost_TOU), 
+                                      opr_costs_non_TOU = sum(hourly_cost_non_TOU))
 
 write.xlsx(as.data.frame(annual_operational_costs), 
            "Potential_Model_Input_Tables/annual_operational_costs.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
+
+# annual rate increase estimation
+# Anaylze PG&E rate increase from 2008 to 2018
+
