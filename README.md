@@ -117,7 +117,7 @@ Regular Electricity rates: climate zone to utility mapping excel file title is "
 PGE: https://www.pge.com/tariffs/electric.shtml  
 SDGE: https://www.sdge.com/sites/default/files/regulatory/7-1-18%20Schedule%20DR%20Total%20Rates%20Table.pdf  
 SCE: https://www.sce.com/NR/sc3/tm2/pdf/ce12-12.pdf  
-IID:  
+IID: climate zone 15 is avg of all other climate zones  
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
 
 --------------------------------------------------------------------------------------------------------------------------------------
