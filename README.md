@@ -102,14 +102,24 @@ gas rates for CZs uses utility tariff data, using just baseline residential data
 PGE: $1.19035 
 SCG: $0.90410
 SDGE: $1.2142  
-mapping utilities to climzte zones:
-http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf
+mapping utilities to climate zones:
+http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf  
 https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf  
+https://www.energy.ca.gov/maps/serviceareas/CA_Electric_Investor_Owned_Utilities_IOUs.pdf  
+https://www.energy.ca.gov/maps/serviceareas/Electric_Utility_Service_Areas.pdf  
 
 TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
 Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
+
+Regular Electricity rates: climate zone to utility mapping excel file title is "climate_zone_rate_mapping"  
+PGE: https://www.pge.com/tariffs/electric.shtml  
+SDGE: https://www.sdge.com/sites/default/files/regulatory/7-1-18%20Schedule%20DR%20Total%20Rates%20Table.pdf  
+SCE: https://www.sce.com/NR/sc3/tm2/pdf/ce12-12.pdf  
+IID: climate zone 15 is avg of all other climate zones  
+CZ 13, 16: avg of PGE and SCE
+CZ 14: 20% SDGE, 80% SCE  
 
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
 
