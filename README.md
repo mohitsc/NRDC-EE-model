@@ -113,6 +113,10 @@ Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
 
+Regular Electricity rates: climate zone to utility mapping excel file title is "climate_zone_rate_mapping"  
+PGE https://www.pge.com/tariffs/electric.shtml  
+
+
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
 
 --------------------------------------------------------------------------------------------------------------------------------------
