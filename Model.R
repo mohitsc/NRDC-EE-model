@@ -37,7 +37,7 @@ consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consu
 saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/saturation_input_data.xlsx", 
                                          sheet = "R_input"))
 
-# Operational Costs
+# Operational Costs for base year
 annual_operational_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/annual_operational_costs.xlsx"))
 
 # rate change projection by utility
@@ -408,6 +408,8 @@ total_first_year_costs <- total_first_year_costs %>%
 
 #discounted future costs = costs/(1+r)^n
 discount_rate <- 0.03
+# rate increases 
+avg_increase = summarise_all(rate_pct_change, mean, na.rm = TRUE)
 
 operational_cost_savings <- merge(select(measure_table, base_tech_name:delivery_type, building_type), 
                                   annual_operational_costs, 
@@ -451,8 +453,12 @@ operational_cost_savings <- operational_cost_savings %>%
          efficient_opr_costs_non_TOU)
 
 
-#YEARWISE OPR COST SAVINGS FRAMEWORK
+#YEARWISE OPR COST SAVINGS
+
 for(year in (current_year+1):project_until){
+  
+  operational_cost_savings <- operational_cost_savings %>% mutate()
+  
   operational_cost_savings <- bind_cols(operational_cost_savings, 
                                  temp = ifelse(operational_cost_savings$delivery_type == "ROB",
                                                operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU,
@@ -490,69 +496,5 @@ write.xlsx(as.data.frame(operational_cost_savings),
 
 
 
-names(annual_operational_costs)[names(annual_operational_costs) == "opr_costs"] <- paste0("opr_costs_",
-                                                                                          (current_year+1))
 
 
-
-
-
-# # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
-# 
-# RUL <- 5
-# RUL_year <- current_year + RUL
-# 
-# ## Attempting to create a conditional function, multiply number of installs by ROB savings if RUL elapses
-# 
-# # KWh
-# lifetime_savings_kwh_ROB <- annual_technical_potential_kwh %>% 
-#   group_by(measure, delivery_type) %>%
-#   summarise_at(vars_select(names(technical_potential_kwh), contains("savings_kwh")), sum) %>% 
-#   filter(delivery_type == "ROB")
-# 
-# cumulative <- integer(nrow(lifetime_savings_kwh_ROB))
-# 
-# cumulative_func <- function(savings){
-#   cumulative <<- cumulative + savings
-#   return(cumulative)
-# }
-# 
-# temp <- tbl_df(apply(lifetime_savings_kwh_ROB[3:ncol(lifetime_savings_kwh_ROB)], 2, cumulative_func)) 
-# names(temp) <- names(lifetime_savings_kwh_ROB[3:ncol(lifetime_savings_kwh_ROB)])
-# 
-# lifetime_savings_kwh_ROB <- bind_cols(select(lifetime_savings_kwh_ROB, measure),
-#                                   temp) 
-# 
-# lifetime_savings_kwh_ROB <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name),
-#                                   lifetime_savings_kwh_ROB,
-#                                   by = "measure")
-#                                   
-# # Therms
-# lifetime_savings_therms_ROB <- annual_technical_potential_therms %>% 
-#   group_by(measure, delivery_type) %>%
-#   summarise_at(vars_select(names(technical_potential_therms), contains("savings_therms")), sum) %>% 
-#   filter(delivery_type == "ROB")
-# 
-# cumulative <- integer(nrow(lifetime_savings_therms_ROB))
-# 
-# temp <- tbl_df(apply(lifetime_savings_therms_ROB[3:ncol(lifetime_savings_therms_ROB)], 2, cumulative_func)) 
-# names(temp) <- names(lifetime_savings_therms_ROB[3:ncol(lifetime_savings_therms_ROB)])
-# 
-# lifetime_savings_therms_ROB <- bind_cols(select(lifetime_savings_therms_ROB, measure),
-#                                       temp) 
-# 
-# lifetime_savings_therms_ROB <- merge(select(measure_table, measure, base_tech_name, efficient_tech_name),
-#                                   lifetime_savings_therms_ROB,
-#                                   by = "measure")
-# # RET calculations
-
-# for(year in current_year:RUL_year){
-#   RET_calculations[[year]] <- mutate_at(filter(installs_per_year,delivery_type == "RET"),
-#                                               vars(contains("installs")),
-#                                               .funs = over_base_kwh_savings)
-# }
-# for(year in (RUL_year+1):project_until){
-#   RET_calculations[[year]] <- mutate_at(filter(installs_per_year,delivery_type == "RET"),
-#                                         vars(contains("installs")),
-#                                         .funs = over_code_kwh_savings)
-# }
