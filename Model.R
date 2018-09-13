@@ -408,8 +408,6 @@ total_first_year_costs <- total_first_year_costs %>%
 
 #discounted future costs = costs/(1+r)^n
 discount_rate <- 0.03
-#increase in rates each year by 2.5%, arbitrary value (look at rate history and regress)
-rate_increase_factor <- 1.025 
 
 operational_cost_savings <- merge(select(measure_table, base_tech_name:delivery_type, building_type), 
                                   annual_operational_costs, 
@@ -463,6 +461,9 @@ for(year in (current_year+1):project_until){
                                                       operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU)
                                                ))
   
+  #applying discount rate of base_year_savings/(1+discount_rate)^(year- current_year)
+  operational_cost_savings <- operational_cost_savings %>% 
+    mutate(temp = temp / (1 + discount_rate)^(year - current_year))
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("non_TOU_savings_", year)
   
   operational_cost_savings <- bind_cols(operational_cost_savings, 
@@ -472,7 +473,8 @@ for(year in (current_year+1):project_until){
                                                              operational_cost_savings$base_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU,
                                                              operational_cost_savings$code_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU)
                                         ))
-  
+  operational_cost_savings <- operational_cost_savings %>% 
+    mutate(temp = temp / (1 + discount_rate)^(year - current_year))
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
 }
 
