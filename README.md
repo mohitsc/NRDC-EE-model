@@ -97,6 +97,8 @@ https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-c
 
 Using IEPR 2017 forecast tables for gas and electricity prices of each utility, 2016 to 2030 estimated growth rates: http://www.energy.ca.gov/2017_energypolicy/documents/2018-02-21_business_meeting/2018-02-21_middemandcase_forecst.php  
 
+growth rate for gas estimated by using 2018 to 2030 estimation : future = present (1 + r)^n  
+
 check excel file "climate_zone_rate_mapping"  
 
 mapping utilities to climate zones:
