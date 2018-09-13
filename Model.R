@@ -452,12 +452,30 @@ operational_cost_savings <- operational_cost_savings %>%
          code_opr_costs_non_TOU,
          efficient_opr_costs_non_TOU)
 
+apply_rate <- function(tech_name_input){
+  group = technology_list$tech_group[technology_list$tech_name==tech_name_input]
+  return (ifelse(group == "Elec Water Heaters",
+                 avg_increase$electricity_rates_increase, 
+                 avg_increase$gas_rates_increase))
+}
+
 
 #YEARWISE OPR COST SAVINGS
 
 for(year in (current_year+1):project_until){
   
-  operational_cost_savings <- operational_cost_savings %>% mutate()
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(base_opr_costs_TOU = (1+apply_rate(base_tech_name)) * base_opr_costs_TOU)
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(code_opr_costs_TOU = (1+apply_rate(code_tech_name)) * code_opr_costs_TOU)
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(efficicent_opr_costs_TOU = (1+apply_rate(efficient_tech_name)) * efficient_opr_costs_TOU)
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(base_opr_costs_non_TOU = (1+apply_rate(base_tech_name)) * base_opr_costs_non_TOU)
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(code_opr_costs_non_TOU = (1+apply_rate(code_tech_name)) * code_opr_costs_non_TOU)
+  operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
+    mutate(efficient_opr_costs_non_TOU = (1+apply_rate(efficient_tech_name)) * efficient_opr_costs_non_TOU)
   
   operational_cost_savings <- bind_cols(operational_cost_savings, 
                                  temp = ifelse(operational_cost_savings$delivery_type == "ROB",
@@ -483,10 +501,6 @@ for(year in (current_year+1):project_until){
     mutate(temp = temp / (1 + discount_rate)^(year - current_year))
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
 }
-
-
-
-
 
 write.xlsx(as.data.frame(operational_cost_savings), 
            "Potential_Model_Output_Tables/operational_costs_savings.xlsx", 
