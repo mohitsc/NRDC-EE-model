@@ -92,16 +92,15 @@ EUL
  Payback Model
 Merrian: referred to in Synapse Study
  "The most comparable model I found was a Rheem 50-gallon tank with three times the efficiency of a standard water heater priced at $1,199 from Home Depot. I polled several utilities, contractors, and energy efficiency program implementers in California and the Pacific Northwest, and the average cost they gave was $2000 to $2600 for equipment, installation, and mark-up"
-https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy
+https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy  
 
-https://www.pge.com/tariffs/assets/pdf/tariffbook/GAS_SCHEDS_G-1.pdf
-https://www.socalgas.com/regulatory/tariffs/tm2/pdf/GR.pdf
-https://scgenvoy.sempra.com/ebb/attachments/1517593864442_SDG&E_AL_2647-G.pdf
 
-gas rates for CZs uses utility tariff data, using just baseline residential data  
-PGE: $1.19035 
-SCG: $0.90410
-SDGE: $1.2142  
+Using IEPR 2017 forecast tables for gas and electricity prices of each utility, 2016 to 2030 estimated growth rates: http://www.energy.ca.gov/2017_energypolicy/documents/2018-02-21_business_meeting/2018-02-21_middemandcase_forecst.php  
+
+growth rate for gas estimated by using 2018 to 2030 estimation : future = present (1 + r)^n  
+
+check excel file "climate_zone_rate_mapping"  
+
 mapping utilities to climate zones:
 http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf  
 https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf  
@@ -112,14 +111,6 @@ TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
 Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
-
-Regular Electricity rates: climate zone to utility mapping excel file title is "climate_zone_rate_mapping"  
-PGE: https://www.pge.com/tariffs/electric.shtml  
-SDGE: https://www.sdge.com/sites/default/files/regulatory/7-1-18%20Schedule%20DR%20Total%20Rates%20Table.pdf  
-SCE: https://www.sce.com/NR/sc3/tm2/pdf/ce12-12.pdf  
-IID: climate zone 15 is avg of all other climate zones  
-CZ 13, 16: avg of PGE and SCE
-CZ 14: 20% SDGE, 80% SCE  
 
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones
 
