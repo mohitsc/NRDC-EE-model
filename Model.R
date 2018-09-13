@@ -469,7 +469,7 @@ for(year in (current_year+1):project_until){
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
     mutate(code_opr_costs_TOU = (1+apply_rate(code_tech_name)) * code_opr_costs_TOU)
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
-    mutate(efficicent_opr_costs_TOU = (1+apply_rate(efficient_tech_name)) * efficient_opr_costs_TOU)
+    mutate(efficient_opr_costs_TOU = (1+apply_rate(efficient_tech_name)) * efficient_opr_costs_TOU)
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
     mutate(base_opr_costs_non_TOU = (1+apply_rate(base_tech_name)) * base_opr_costs_non_TOU)
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
@@ -485,9 +485,6 @@ for(year in (current_year+1):project_until){
                                                       operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU)
                                                ))
   
-  #applying discount rate of base_year_savings/(1+discount_rate)^(year- current_year)
-  operational_cost_savings <- operational_cost_savings %>% 
-    mutate(temp = temp / (1 + discount_rate)^(year - current_year))
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("non_TOU_savings_", year)
   
   operational_cost_savings <- bind_cols(operational_cost_savings, 
@@ -497,18 +494,45 @@ for(year in (current_year+1):project_until){
                                                              operational_cost_savings$base_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU,
                                                              operational_cost_savings$code_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU)
                                         ))
-  operational_cost_savings <- operational_cost_savings %>% 
-    mutate(temp = temp / (1 + discount_rate)^(year - current_year))
+
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
 }
+
+operational_cost_savings <- operational_cost_savings %>% 
+  select(-(base_EUL:efficient_opr_costs_non_TOU))
+
+#applying discount rate of base_year_savings/(1+discount_rate)^(year- current_year)
+
+original_names <- names(operational_cost_savings)
+
+for(savings_column in names(operational_cost_savings)){
+  if(grepl("savings", savings_column)){
+    temp1 = operational_cost_savings[savings_column]/(1 + discount_rate)^(parse_number(savings_column) - current_year)
+    operational_cost_savings <- bind_cols(operational_cost_savings, temp1)
+    operational_cost_savings <- operational_cost_savings[ , !(names(operational_cost_savings) == savings_column)]
+  }
+}
+names(operational_cost_savings) <- original_names
+
+
+# Payback table
+cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
+payback <- function(savings){
+  cumulative_gain <<- cumulative_gain + savings
+  return(cumulative_gain)
+}
+
+operational_cost_savings <- operational_cost_savings %>%
+  mutate_at(vars(contains("non_TOU_savings")), payback)
+
+cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
+
+operational_cost_savings <- operational_cost_savings %>%
+  mutate_at(vars(starts_with("TOU_savings")), payback)
 
 write.xlsx(as.data.frame(operational_cost_savings), 
            "Potential_Model_Output_Tables/operational_costs_savings.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
-
-
-
-
 
 
