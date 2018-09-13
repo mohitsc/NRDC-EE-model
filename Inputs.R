@@ -516,7 +516,7 @@ TOU_rates <- select(TOU_rates,
                     NRDC_TOU_rate) %>% arrange(climate_zone,day_of_year, hour)
 
 #import gas rates for each climate zone
-gas_and_non_TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx"))
+gas_and_non_TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx", sheet = "rates"))
 
 rates <- merge(TOU_rates, gas_and_non_TOU_rates, 
            by = "climate_zone")

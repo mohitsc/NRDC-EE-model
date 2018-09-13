@@ -40,6 +40,9 @@ saturation_input <- tbl_df(read_excel("Potential_Model_Input_Tables/saturation_i
 # Operational Costs
 annual_operational_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/annual_operational_costs.xlsx"))
 
+# rate change projection by utility
+rate_pct_change <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx", sheet = "forecast"))
+
 # Per Unit Savings Table -----------------------------------------------------------
 
 per_unit_savings_table <- merge(measure_table, 
@@ -429,6 +432,10 @@ operational_cost_savings <- merge(operational_cost_savings,
   rename("code_opr_costs_TOU" = opr_costs_TOU,
          "code_opr_costs_non_TOU" = opr_costs_non_TOU)
 
+operational_cost_savings <- merge(operational_cost_savings, 
+                                  select(technology_list, tech_name, EUL),
+                                  by.x = "base_tech_name", 
+                                  by.y = "tech_name")
 
 operational_cost_savings <- operational_cost_savings %>%
   select(base_tech_name,
@@ -437,6 +444,7 @@ operational_cost_savings <- operational_cost_savings %>%
          climate_zone,
          delivery_type,
          building_type,
+         base_EUL = EUL,
          base_opr_costs_TOU,
          code_opr_costs_TOU,
          efficient_opr_costs_TOU,
@@ -444,8 +452,36 @@ operational_cost_savings <- operational_cost_savings %>%
          code_opr_costs_non_TOU,
          efficient_opr_costs_non_TOU)
 
+
+#YEARWISE OPR COST SAVINGS FRAMEWORK
+for(year in (current_year+1):project_until){
+  operational_cost_savings <- bind_cols(operational_cost_savings, 
+                                 temp = ifelse(operational_cost_savings$delivery_type == "ROB",
+                                               operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU,
+                                               ifelse(year<(current_year + (operational_cost_savings$base_EUL/3)), 
+                                                      operational_cost_savings$base_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU,
+                                                      operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU)
+                                               ))
+  
+  names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("non_TOU_savings_", year)
+  
+  operational_cost_savings <- bind_cols(operational_cost_savings, 
+                                        temp = ifelse(operational_cost_savings$delivery_type == "ROB",
+                                                      operational_cost_savings$code_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU,
+                                                      ifelse(year<(current_year + (operational_cost_savings$base_EUL/3)), 
+                                                             operational_cost_savings$base_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU,
+                                                             operational_cost_savings$code_opr_costs_TOU - operational_cost_savings$efficient_opr_costs_TOU)
+                                        ))
+  
+  names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
+}
+
+
+
+
+
 write.xlsx(as.data.frame(operational_cost_savings), 
-           "Potential_Model_Output_Tables/2019_operational_costs.xlsx", 
+           "Potential_Model_Output_Tables/operational_costs_savings.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
 
@@ -456,15 +492,7 @@ names(annual_operational_costs)[names(annual_operational_costs) == "opr_costs"] 
                                                                                           (current_year+1))
 
 
-#YEARWISE OPR COST SAVINGS FRAMEWORK
-for(year in (current_year+2):project_until){
-  installs_per_year <- bind_cols(installs_per_year, 
-                                 temp = ifelse((installs_per_year$cumulative_installs + installs_per_year$measure_limit/installs_per_year$EUL) <= installs_per_year$measure_limit, 
-                                               installs_per_year$measure_limit/installs_per_year$EUL,
-                                               installs_per_year$measure_limit - installs_per_year$cumulative_installs))
-  
-  names(installs_per_year)[names(installs_per_year) == "temp"] <- paste0("installs_", year)
-}
+
 
 
 # # Lifetime savings table by separating ROB and RET --------------------------------------------------------------------------------------
