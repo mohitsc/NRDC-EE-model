@@ -22,6 +22,13 @@ Have an electric gas water heater (data collected by climate zone)
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
 
 --------------------------------------------------------------------------------------------------------------------------------------
+Saturation data
+CLASS 2012: Efficiency Factor distribution of each CZ
+Selection of 02. Energy Factor - Bins , Report Year: 2012 , Weighting Scheme: Census Weights, Group By: [Climate Zone] , Filters: [Type of Residence] IN ('01 - Single Family Detached','02 - Apt 2-4 Units','06 - Townhouse/Rowhouse (2-4 Unit Multi-Story)') AND [Water Heater Fuel Type] IN ('Electric') AND [Size of Water Heater] IN ('40-49 Gallons','50-59 Gallons')
+
+For Electric: CZ 4 and 8 and 15 are average of the rest
+
+--------------------------------------------------------------------------------------------------------------------------------------
 
 Pierre HPWH data for HPWH performance by CZ, location  
 Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)  
