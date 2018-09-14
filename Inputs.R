@@ -662,7 +662,7 @@ operational_costs_8760 <- operational_costs_8760 %>%
                                       gas_rate * loadshape))
 
 annual_operational_costs <- operational_costs_8760 %>% 
-  group_by(tech_group, climate_zone)
+  group_by(tech_group, loadshape_label, climate_zone)
 
 annual_operational_costs <- summarise(annual_operational_costs, 
                                       TOU_multiplier = sum(hourly_cost_TOU_multiplier), 
@@ -671,8 +671,8 @@ annual_operational_costs <- summarise(annual_operational_costs,
 
 #merging with consumption
 annual_operational_costs <- merge(annual_operational_costs,
-                                  select(technology_list, tech_name, tech_group),
-                                  by = "tech_group")
+                                  select(technology_list, tech_name, tech_group, loadshape_label),
+                                  by = c("tech_group", "loadshape_label"))
 
 annual_operational_costs <- merge(annual_operational_costs,
                                 input_consumption_table,
@@ -701,6 +701,5 @@ write.xlsx(as.data.frame(annual_operational_costs),
            row.names = FALSE,
            sheetName = "R_input")
 
-# annual rate increase estimation
-# Anaylze PG&E rate increase from 2008 to 2018
+
 

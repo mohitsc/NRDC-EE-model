@@ -238,89 +238,34 @@ write.xlsx(as.data.frame(annual_technical_potential_therms),
            "Potential_Model_Output_Tables/tech_potential_therms_savings.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
+# 
+# # Lifetime savings table 
+# lifetime_savings_kwh <- select(annual_technical_potential_kwh, base_tech_name:EUL)
+# cumulative_savings_kwh <- select(annual_technical_potential_kwh, 
+#                                  base_tech_name:delivery_type,
+#                              cumulative_savings = vars_select(names(lifetime_savings_kwh), 
+#                                          contains(as.character(current_year+1))))
+# 
+# for(year in (current_year+2):project_until){
+#   year_column <- select(annual_technical_potential_kwh, 
+#                         vars_select(names(annual_technical_potential_kwh), 
+#                                     contains(as.character(year))))
+#   cumulative_savings_kwh <- cumulative_savings_kwh %>%
+#     mutate(cumulative_savings = ifelse(delivery_type == "ROB",
+#                                        cumulative_savings + year_column,
+#                                        cumulative_savings))
+#   lifetime_savings_kwh <- bind_cols(lifetime_savings_kwh,
+#                                     cumulative_savings_kwh$cumulative_savings)
+# }
+# 
+# 
+# 
 
-# Lifetime savings table 
-# cumulative_lifetime_kwh_savings <- select(installs_per_year,
-#                                       base_tech_name:delivery_type,
-#                                       EUL)
-# for(year in (current_year+1):project_until){
-#   cumulative_lifetime_kwh_savings <- bind_cols(cumulative_lifetime_kwh_savings,
-#                                                           temp = rep.int(0, times = nrow(cumulative_lifetime_kwh_savings)))
-#   names(cumulative_lifetime_kwh_savings)[names(cumulative_lifetime_kwh_savings) == "temp"] <- paste0("savings_kwh_",
-#                                                                                              year)
-# }
-# 
-# 
-# lifetime_kwh_calculations <- list()
-# 
-# for(installs_year in (current_year+1):project_until){
-#   
-#   lifetime_kwh_calculations[[installs_year]] <- select(installs_per_year,
-#                                                    base_tech_name:delivery_type,
-#                                                    EUL)
-#   
-#   installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(installs_year))))
-#   
-#   for(savings_year in installs_year:project_until){
-#     savings_column <- over_base_kwh_savings(installs_column)
-#     names(savings_column) <- paste0("savings_kwh_", savings_year)
-#     
-#     lifetime_kwh_calculations[[installs_year]] <- bind_cols(lifetime_kwh_calculations[[installs_year]], 
-#                                                             savings_column)
-#     cumulative_adder <- function(column) {
-#       return (column + savings_column[,1]) 
-#     }
-#     
-#     cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, 
-#                                                  .vars = vars(contains(as.character(savings_year))), 
-#                                                  cumulative_adder)
-#   }
-#   
-# }
-#ADAPT THIS TO LIFETIME SAVINGS
-# #adding pre and post RUL cost columns
-# 
-# first_year_costs_RET_pre_RUL <- merge(select(RET_subset, 
-#                                              base_tech_name, 
-#                                              efficient_tech_name, 
-#                                              climate_zone, 
-#                                              delivery_type, 
-#                                              building_type,
-#                                              vars_select(names(installs_per_year), contains("installs"))),
-#                                       first_year_costs_RET_pre_RUL,
-#                                       by = c("base_tech_name", 
-#                                              "efficient_tech_name", 
-#                                              "delivery_type", 
-#                                              "building_type")) %>%
-#   rename("pre_RUL_costs" = costs)
-# 
-# first_year_costs_RET <- merge(first_year_costs_RET_pre_RUL,
-#                               first_year_costs_RET_post_RUL,
-#                               by = c("base_tech_name",
-#                                      "code_tech_name",
-#                                      "efficient_tech_name", 
-#                                      "delivery_type", 
-#                                      "building_type")) %>%
-#   rename("post_RUL_costs" = costs)
-# 
-# rm(first_year_costs_RET_post_RUL, first_year_costs_RET_pre_RUL)
-# 
-# 
-# first_year_costs_RET <- mutate_at(first_year_costs_RET, 
-#                                   vars(matches("installs_[2019:2022]")), 
-#                                   funs(. * pre_RUL_costs))
-# first_year_costs_RET <- mutate_at(first_year_costs_RET, 
-#                                   vars(matches("installs_[2023:2030]")), 
-#                                   funs(. * post_RUL_costs))
-# 
-# first_year_costs_RET <- rename_at(first_year_costs_RET,
-#                                   vars(contains("installs_")), 
-#                                   funs(paste0("costs_", parse_number(.)))) %>%
-#   rename("cumulative_costs" = cumulative_installs)
+
 
 
 # incremental first year costs -------------------------------------------------------------------------------
-# RET costs pre RUL = efficient costs
+# RET costs = efficient costs
 first_year_costs_RET <- merge(select(technology_list, tech_name, costs), 
                                         filter(measure_table, delivery_type == "RET"),
                                         by.x = "tech_name",
