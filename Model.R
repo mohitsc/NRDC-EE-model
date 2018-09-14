@@ -96,13 +96,13 @@ tech_population <- merge(regional_population,
   mutate(tech_group_population = number_of_buildings * fraction_of_homes_ownership) %>%
   select(climate_zone, 
          building_type, 
-         technology_group, 
+         tech_group = technology_group, 
          tech_group_population)
 
 #saturation to number of models
 tech_population <- merge(saturation_input, 
                          tech_population,
-                         by = c("climate_zone", "building_type", "technology_group"))
+                         by = c("climate_zone", "building_type", "tech_group"))
 tech_population <- mutate(tech_population, 
                            number_of_models = tech_group_population * saturation) %>%
   select(-tech_group_population,
@@ -239,7 +239,7 @@ write.xlsx(as.data.frame(annual_technical_potential_therms),
            row.names = FALSE,
            sheetName = "R_output")
 
-# # Lifetime savings table by making list of lifetime savings dataframes
+# Lifetime savings table 
 # cumulative_lifetime_kwh_savings <- select(installs_per_year,
 #                                       base_tech_name:delivery_type,
 #                                       EUL)

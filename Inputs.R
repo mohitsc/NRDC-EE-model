@@ -375,27 +375,30 @@ write.xlsx(as.data.frame(input_consumption_table),
 # Saturation data from CLASS 2012: modeling tech saturation till 2018 --------------------------------
 
 # Technology Saturation by EF and CZ
-initial_tech_saturation <- tbl_df(read_excel("Input_to_Input_Tables/CLASS_instantaneous_and_storage_EF_cz.xlsx", 
+
+#################################################### Gas ######################################################
+
+initial_tech_saturation_gas <- tbl_df(read_excel("Input_to_Input_Tables/CLASS_instantaneous_and_storage_EF_cz.xlsx", 
                                              sheet = "R_input"))
-initial_tech_saturation[is.na(initial_tech_saturation)] <- 0
+initial_tech_saturation_gas[is.na(initial_tech_saturation_gas)] <- 0
+
 
 saturation_cz_year_wise <- list()
-saturation_cz_year_wise[[2012]] <- initial_tech_saturation
+saturation_cz_year_wise[[2012]] <- initial_tech_saturation_gas
 
 
 
 start_year <- 2013
 current_year <- 2018
 
-tech_saturation <- initial_tech_saturation
+tech_saturation <- initial_tech_saturation_gas
 tech_saturation <- tech_saturation %>% 
   mutate( "Small Gas Storage Water Heater (0.48 EF - 0.559 EF)" = rowSums(select(tech_saturation,
                                                                                  "0.48-0.519 EF":"0.52-0.559 EF")),
           "Small Gas Storage Water Heater (0.56 EF - 0.599 EF)" = rowSums(select(tech_saturation,
                                                                                  "0.56-0.599 EF")),
           "Small Gas Storage Water Heater (0.60 EF - 0.639 EF)" = tech_saturation$`0.60-0.639 EF`, 
-          #"Instantaneous Gas Water Heater (0.80 EF - 0.879 EF)" = rowSums(select(tech_saturation, 
-          #                                                                      "0.80-0.839 EF":"0.84-0.879 EF")),
+          
           "GE 2014 Heat Pump Water Heater- low cost" = 0,
           "GE 2014 Heat Pump Water Heater- medium cost" = 0,
           "GE 2014 Heat Pump Water Heater- high cost" = 0) %>%
@@ -403,7 +406,7 @@ tech_saturation <- tech_saturation %>%
          "Small Gas Storage Water Heater (0.48 EF - 0.559 EF)",
          "Small Gas Storage Water Heater (0.56 EF - 0.599 EF)",
          "Small Gas Storage Water Heater (0.60 EF - 0.639 EF)", 
-         #"Instantaneous Gas Water Heater (0.80 EF - 0.879 EF)",
+         
          "GE 2014 Heat Pump Water Heater- low cost",
          "GE 2014 Heat Pump Water Heater- medium cost",
          "GE 2014 Heat Pump Water Heater- high cost")
@@ -448,23 +451,76 @@ for(year in start_year:current_year){
   saturation_cz_year_wise[[year]] <- tech_saturation
 } 
 
+
+#################################################### Electric####################################################
+
+initial_tech_saturation_elec <- tbl_df(read_excel("Input_to_Input_Tables/CLASS_Electric_Saturation.xlsx", 
+                                                  sheet = "R_input"))
+initial_tech_saturation_elec[is.na(initial_tech_saturation_elec)] <- 0
+
+
+tech_saturation <- initial_tech_saturation_elec
+tech_saturation <- tech_saturation %>% 
+  mutate( "Small Electric Storage Water Heater (0.86 EF)" = tech_saturation$`0.84-0.879 EF`,
+          "Small Electric Storage Water Heater (0.90 EF)" = tech_saturation$`0.88-0.919 EF`,
+          "High Eff. Small Electric Storage Water Heater (0.93 EF)" = tech_saturation$`0.92-0.959 EF`) %>%
+  select(climate_zone, 
+         "Small Electric Storage Water Heater (0.86 EF)",
+         "Small Electric Storage Water Heater (0.90 EF)",
+         "High Eff. Small Electric Storage Water Heater (0.93 EF)")
+
+tech_saturation <- arrange(gather(tech_saturation, tech_name, saturation, -climate_zone), climate_zone)
+
+#projecting saturation values from 2013 to 2018
+#replacement rate of 1/EUL, half replaced by code, half replaced by efficient
+#instantaneous gas water heater remains the same
+#Energy Star data for CA would make this assumption more accurate
+for(year in start_year:current_year){
+  EUL <- 13
+  below_code <- filter(tech_saturation, tech_name == "Small Electric Storage Water Heater (0.86 EF)")
+  code_before_2015 <- filter(tech_saturation, tech_name == "Small Electric Storage Water Heater (0.90 EF)")
+  code_after_2015 <- filter(tech_saturation, tech_name == "High Eff. Small Electric Storage Water Heater (0.93 EF)")
+
+  if(year < 2015){
+    code_after_2015$saturation <- code_after_2015$saturation + 
+      (below_code$saturation * 0.5 * (1/EUL)) + 
+      (code_before_2015$saturation * (1/EUL))
+    
+    
+    code_before_2015$saturation <- code_before_2015$saturation * (1-(1/EUL))
+    code_before_2015$saturation <- code_before_2015$saturation + below_code$saturation * 0.5 * (1/EUL)
+    
+    below_code$saturation <- below_code$saturation * (1-(1/EUL))
+  }
+  else{
+    code_after_2015$saturation <- code_after_2015$saturation + 
+      (code_before_2015$saturation * (1/EUL)) + 
+      (below_code$saturation * (1/EUL))
+    
+    code_before_2015$saturation <- code_before_2015$saturation * (1-(1/EUL))
+    
+    below_code$saturation <- below_code$saturation * (1-(1/EUL))
+  }
+  
+  tech_saturation <- arrange(rbind(below_code, code_before_2015, code_after_2015), climate_zone)
+  saturation_cz_year_wise[[year]] <- rbind(saturation_cz_year_wise[[year]], tech_saturation)
+} 
+
 #merging EUL from tech_list with saturation values 
 saturation_cz_year_wise[[2018]] <- merge(saturation_cz_year_wise[[2018]], 
-                                         select(technology_list, EUL, tech_name), 
+                                         select(technology_list, EUL, tech_group, tech_name), 
                                          by = "tech_name") %>%
-  mutate(building_type = "Single Family",
-         technology_group = ifelse(tech_name == "GE 2014 Heat Pump Water Heater- low cost" | 
-                                  tech_name == "GE 2014 Heat Pump Water Heater- medium cost" |
-                                  tech_name == "GE 2014 Heat Pump Water Heater- high cost" ,
-                                   "Elec Water Heaters",
-                                  "Gas Water Heaters"))
+  mutate(building_type = "Single Family")
+
+saturation_cz_year_wise[[2018]] <- saturation_cz_year_wise[[2018]] %>% 
+  arrange(tech_name, climate_zone)
 
 write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]), 
            "Potential_Model_Input_Tables/saturation_input_data.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
 
-# Reading in TOU Rates from Pierre HPWH Flexibility Study, simulation using PGE values
+# Reading in TOU Rates from Pierre HPWH Flexibility Study, simulation using PGE values----------------------------------------------------
 TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/Hourly price schedules v13.xlsx", sheet = "R_input"))
 
 TOU_rates <- rename(TOU_rates,
