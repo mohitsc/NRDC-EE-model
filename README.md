@@ -26,7 +26,7 @@ Saturation data
 CLASS 2012: Efficiency Factor distribution of each CZ
 Selection of 02. Energy Factor - Bins , Report Year: 2012 , Weighting Scheme: Census Weights, Group By: [Climate Zone] , Filters: [Type of Residence] IN ('01 - Single Family Detached','02 - Apt 2-4 Units','06 - Townhouse/Rowhouse (2-4 Unit Multi-Story)') AND [Water Heater Fuel Type] IN ('Electric') AND [Size of Water Heater] IN ('40-49 Gallons','50-59 Gallons')
 
-For Electric: CZ 4 and 8 are average of the rest
+For Electric: CZ 4 and 8 and 15 are average of the rest
 
 --------------------------------------------------------------------------------------------------------------------------------------
 
