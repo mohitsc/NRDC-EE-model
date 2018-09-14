@@ -149,7 +149,7 @@ tech_costs <- select(working_PG_data,
                      labor_cost) %>% distinct()
 
 write.xlsx(as.data.frame(tech_costs), 
-           "Potential_Model_Input_Tables/tech_costs_table.xlsx", 
+           "PG_Data+Reports/PG_tech_costs_table.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
 
@@ -589,44 +589,56 @@ fwrite(as.data.frame(loadshapes),
 operational_costs_8760 <- merge(loadshapes, rates, by = c("climate_zone", "day_of_year", "hour")) %>%
   arrange(climate_zone, loadshape_label, hour_of_year)
 
-#merging with tech_names
+#merging with tech_groups
 operational_costs_8760 <- merge(operational_costs_8760, 
-                           select(technology_list, tech_name, tech_group, loadshape_label),
+                           distinct(select(technology_list, tech_group, loadshape_label)),
                            by = "loadshape_label")
-#merging with consumption
-operational_costs_8760 <- merge(operational_costs_8760,
-                           consumption_table,
-                           by = c("tech_name", "climate_zone"))
 
-operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_TOU = ifelse(tech_group == "Elec Water Heaters",
-                                                                       NRDC_TOU_rate * loadshape * base_consumption_kwh,
-                                                                       gas_rate * loadshape * base_consumption_therms))
-operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_non_TOU = ifelse(tech_group == "Elec Water Heaters",
-                                                                                     electric_rate * loadshape * base_consumption_kwh,
-                                                                                     gas_rate * loadshape * base_consumption_therms))
 
 operational_costs_8760 <- operational_costs_8760 %>% 
-  select(tech_name,
-         climate_zone,
-         hour_of_year,
-         loadshape_label,
-         building_type,
-         hourly_cost_TOU,
-         hourly_cost_non_TOU) %>% 
-  arrange(tech_name,
-          climate_zone,
-          hour_of_year)
+  mutate(hourly_cost_TOU_multiplier = ifelse(tech_group == "Elec Water Heaters",
+                                  NRDC_TOU_rate * loadshape,
+                                  gas_rate * loadshape))
 
-fwrite(as.data.frame(operational_costs_8760), 
-       "Potential_Model_Input_Tables/operational_costs_8760_hours.csv", 
-       row.names = FALSE)
+operational_costs_8760 <- operational_costs_8760 %>% 
+  mutate(hourly_cost_non_TOU_multiplier = ifelse(tech_group == "Elec Water Heaters",
+                                      electric_rate * loadshape,
+                                      gas_rate * loadshape))
 
 annual_operational_costs <- operational_costs_8760 %>% 
-  group_by(tech_name, climate_zone, building_type)
+  group_by(tech_group, climate_zone)
 
 annual_operational_costs <- summarise(annual_operational_costs, 
-                                      opr_costs_TOU = sum(hourly_cost_TOU), 
-                                      opr_costs_non_TOU = sum(hourly_cost_non_TOU))
+                                      TOU_multiplier = sum(hourly_cost_TOU_multiplier), 
+                                      non_TOU_multiplier = sum(hourly_cost_non_TOU_multiplier))
+
+
+#merging with consumption
+annual_operational_costs <- merge(annual_operational_costs,
+                                  select(technology_list, tech_name, tech_group),
+                                  by = "tech_group")
+
+annual_operational_costs <- merge(annual_operational_costs,
+                                input_consumption_table,
+                                by = c("tech_name", "climate_zone"))
+
+annual_operational_costs <- annual_operational_costs %>%
+  mutate(opr_costs_TOU = ifelse(tech_group == "Elec Water Heaters",
+                                TOU_multiplier * base_consumption_kwh,
+                                TOU_multiplier * base_consumption_therms))
+
+annual_operational_costs <- annual_operational_costs %>%
+  mutate(opr_costs_non_TOU = ifelse(tech_group == "Elec Water Heaters",
+                                non_TOU_multiplier * base_consumption_kwh,
+                                non_TOU_multiplier * base_consumption_therms))
+
+annual_operational_costs <- annual_operational_costs %>%
+  select(tech_name,
+         climate_zone,
+         building_type,
+         opr_costs_TOU,
+         opr_costs_non_TOU) %>%
+  arrange(tech_name, climate_zone)
 
 write.xlsx(as.data.frame(annual_operational_costs), 
            "Potential_Model_Input_Tables/annual_operational_costs.xlsx", 

@@ -24,9 +24,6 @@ technology_list <- tbl_df(read_excel("Potential_Model_Input_Tables/independent_t
 # Technology Group Density List
 tech_density <- tbl_df(read_excel("Potential_Model_Input_Tables/tech_group_density_table.xlsx", sheet = "R_input"))
 
-# Technology Lifetime Costs
-tech_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/tech_costs_table.xlsx", sheet = "R_input"))
-
 # Measure Table
 measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/sample_measure_table.xlsx", 
                                    sheet = "R_input"))
@@ -499,8 +496,8 @@ for(year in (current_year+1):project_until){
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
 }
 
-# operational_cost_savings <- operational_cost_savings %>% 
-#   select(-(base_EUL:efficient_opr_costs_non_TOU))
+ operational_cost_savings <- operational_cost_savings %>% 
+   select(-(base_EUL:efficient_opr_costs_non_TOU))
 
 #applying discount rate of base_year_savings/(1+discount_rate)^(year- current_year)
 
@@ -534,6 +531,22 @@ cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
 
 payback_tables <- payback_tables %>%
   mutate_at(vars(starts_with("TOU_savings")), payback)
+
+payback_tables <- merge(payback_tables, first_year_costs, 
+                        by = c("base_tech_name", 
+                               "code_tech_name", 
+                               "efficient_tech_name", 
+                               "delivery_type", 
+                               "building_type"))
+
+payback_tables <- payback_tables %>%
+  mutate(first_year_incremental_cost = -1 * first_year_incremental_cost)
+
+payback_tables <- payback_tables %>%
+  select(base_tech_name:climate_zone,
+         first_year_incremental_cost,
+         non_TOU_savings_2019:TOU_savings_2030) %>%
+  arrange(base_tech_name, climate_zone)
 
 write.xlsx(as.data.frame(payback_tables), 
            "Potential_Model_Output_Tables/payback_tables.xlsx", 
