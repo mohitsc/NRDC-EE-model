@@ -464,7 +464,7 @@ write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]),
            row.names = FALSE,
            sheetName = "R_input")
 
-# Reading in TOU Rates from Pierre HPWH Flexibility Study
+# Reading in TOU Rates from Pierre HPWH Flexibility Study, simulation using PGE values
 TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/Hourly price schedules v13.xlsx", sheet = "R_input"))
 
 TOU_rates <- rename(TOU_rates,
@@ -520,6 +520,10 @@ gas_and_non_TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_r
 
 rates <- merge(TOU_rates, gas_and_non_TOU_rates, 
            by = "climate_zone")
+
+#Adjusting TOU rates to adjust for PGE source of NRDC TOU calculations
+rates <- rates %>% 
+  mutate(NRDC_TOU_rate = NRDC_TOU_rate * electric_rate / 0.2042)
 
 rm(TOU_rates, gas_and_non_TOU_rates)
 
@@ -596,7 +600,7 @@ operational_costs_8760 <- merge(operational_costs_8760,
 
 operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_TOU = ifelse(tech_group == "Elec Water Heaters",
                                                                        NRDC_TOU_rate * loadshape * base_consumption_kwh,
-                                                                       0))
+                                                                       gas_rate * loadshape * base_consumption_therms))
 operational_costs_8760 <- operational_costs_8760 %>% mutate(hourly_cost_non_TOU = ifelse(tech_group == "Elec Water Heaters",
                                                                                      electric_rate * loadshape * base_consumption_kwh,
                                                                                      gas_rate * loadshape * base_consumption_therms))

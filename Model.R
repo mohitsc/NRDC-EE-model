@@ -242,44 +242,44 @@ write.xlsx(as.data.frame(annual_technical_potential_therms),
            row.names = FALSE,
            sheetName = "R_output")
 
-# Lifetime savings table by making list of lifetime savings dataframes
-cumulative_lifetime_kwh_savings <- select(installs_per_year,
-                                      base_tech_name:delivery_type,
-                                      EUL)
-for(year in (current_year+1):project_until){
-  cumulative_lifetime_kwh_savings <- bind_cols(cumulative_lifetime_kwh_savings,
-                                                          temp = rep.int(0, times = nrow(cumulative_lifetime_kwh_savings)))
-  names(cumulative_lifetime_kwh_savings)[names(cumulative_lifetime_kwh_savings) == "temp"] <- paste0("savings_kwh_",
-                                                                                             year)
-}
-
-
-lifetime_kwh_calculations <- list()
-
-for(installs_year in (current_year+1):project_until){
-  
-  lifetime_kwh_calculations[[installs_year]] <- select(installs_per_year,
-                                                   base_tech_name:delivery_type,
-                                                   EUL)
-  
-  installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(installs_year))))
-  
-  for(savings_year in installs_year:project_until){
-    savings_column <- over_base_kwh_savings(installs_column)
-    names(savings_column) <- paste0("savings_kwh_", savings_year)
-    
-    lifetime_kwh_calculations[[installs_year]] <- bind_cols(lifetime_kwh_calculations[[installs_year]], 
-                                                            savings_column)
-    cumulative_adder <- function(column) {
-      return (column + savings_column[,1]) 
-    }
-    
-    cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, 
-                                                 .vars = vars(contains(as.character(savings_year))), 
-                                                 cumulative_adder)
-  }
-  
-}
+# # Lifetime savings table by making list of lifetime savings dataframes
+# cumulative_lifetime_kwh_savings <- select(installs_per_year,
+#                                       base_tech_name:delivery_type,
+#                                       EUL)
+# for(year in (current_year+1):project_until){
+#   cumulative_lifetime_kwh_savings <- bind_cols(cumulative_lifetime_kwh_savings,
+#                                                           temp = rep.int(0, times = nrow(cumulative_lifetime_kwh_savings)))
+#   names(cumulative_lifetime_kwh_savings)[names(cumulative_lifetime_kwh_savings) == "temp"] <- paste0("savings_kwh_",
+#                                                                                              year)
+# }
+# 
+# 
+# lifetime_kwh_calculations <- list()
+# 
+# for(installs_year in (current_year+1):project_until){
+#   
+#   lifetime_kwh_calculations[[installs_year]] <- select(installs_per_year,
+#                                                    base_tech_name:delivery_type,
+#                                                    EUL)
+#   
+#   installs_column <- select_at(installs_per_year, .vars = vars(contains(as.character(installs_year))))
+#   
+#   for(savings_year in installs_year:project_until){
+#     savings_column <- over_base_kwh_savings(installs_column)
+#     names(savings_column) <- paste0("savings_kwh_", savings_year)
+#     
+#     lifetime_kwh_calculations[[installs_year]] <- bind_cols(lifetime_kwh_calculations[[installs_year]], 
+#                                                             savings_column)
+#     cumulative_adder <- function(column) {
+#       return (column + savings_column[,1]) 
+#     }
+#     
+#     cumulative_lifetime_kwh_savings <- mutate_at(cumulative_lifetime_kwh_savings, 
+#                                                  .vars = vars(contains(as.character(savings_year))), 
+#                                                  cumulative_adder)
+#   }
+#   
+# }
 #ADAPT THIS TO LIFETIME SAVINGS
 # #adding pre and post RUL cost columns
 # 
@@ -372,37 +372,37 @@ write.xlsx(as.data.frame(first_year_costs),
            "Potential_Model_Output_Tables/first_year_costs.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
-
-#Total first year costs including installs
-RET_subset <- filter(technical_potential, delivery_type == "RET")
-ROB_subset <- filter(technical_potential, delivery_type == "ROB")
-
-#adding ROB costs column
-total_first_year_costs_ROB <- merge(select(ROB_subset, 
-                                       base_tech_name, 
-                                       efficient_tech_name, 
-                                       climate_zone, 
-                                       delivery_type, 
-                                       building_type,
-                                       vars_select(names(installs_per_year), contains("installs"))),
-                                first_year_costs_ROB,
-                                by = c("base_tech_name", 
-                                       "efficient_tech_name", 
-                                       "delivery_type", 
-                                       "building_type"))
-                                
-total_first_year_costs_ROB <- mutate_at(total_first_year_costs_ROB, 
-                                    vars(contains("installs")), 
-                                    funs(. * incremental_first_year_cost)) 
-
-total_first_year_costs_ROB <- rename_at(total_first_year_costs_ROB,
-                                    vars(contains("installs_")), 
-                                    funs(paste0("costs_", parse_number(.)))) %>%
-  rename("cumulative_costs" = cumulative_installs)
-
-total_first_year_costs <- total_first_year_costs %>% 
-  mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
-
+# 
+# #Total first year costs including installs
+# RET_subset <- filter(technical_potential, delivery_type == "RET")
+# ROB_subset <- filter(technical_potential, delivery_type == "ROB")
+# 
+# #adding ROB costs column
+# total_first_year_costs_ROB <- merge(select(ROB_subset, 
+#                                        base_tech_name, 
+#                                        efficient_tech_name, 
+#                                        climate_zone, 
+#                                        delivery_type, 
+#                                        building_type,
+#                                        vars_select(names(installs_per_year), contains("installs"))),
+#                                 first_year_costs_ROB,
+#                                 by = c("base_tech_name", 
+#                                        "efficient_tech_name", 
+#                                        "delivery_type", 
+#                                        "building_type"))
+#                                 
+# total_first_year_costs_ROB <- mutate_at(total_first_year_costs_ROB, 
+#                                     vars(contains("installs")), 
+#                                     funs(. * incremental_first_year_cost)) 
+# 
+# total_first_year_costs_ROB <- rename_at(total_first_year_costs_ROB,
+#                                     vars(contains("installs_")), 
+#                                     funs(paste0("costs_", parse_number(.)))) %>%
+#   rename("cumulative_costs" = cumulative_installs)
+# 
+# total_first_year_costs <- total_first_year_costs %>% 
+#   mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
+# 
 
 # Operational cost savings for years between 2019 and 2030-------------------------------------------------------------------------------
 
@@ -463,7 +463,7 @@ apply_rate <- function(tech_name_input){
 #YEARWISE OPR COST SAVINGS
 
 for(year in (current_year+1):project_until){
-  
+  #Calling function to increase rates each year
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
     mutate(base_opr_costs_TOU = (1+apply_rate(base_tech_name)) * base_opr_costs_TOU)
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
@@ -477,6 +477,7 @@ for(year in (current_year+1):project_until){
   operational_cost_savings <- operational_cost_savings %>% rowwise() %>%
     mutate(efficient_opr_costs_non_TOU = (1+apply_rate(efficient_tech_name)) * efficient_opr_costs_non_TOU)
   
+  #calculating savings each measure
   operational_cost_savings <- bind_cols(operational_cost_savings, 
                                  temp = ifelse(operational_cost_savings$delivery_type == "ROB",
                                                operational_cost_savings$code_opr_costs_non_TOU - operational_cost_savings$efficient_opr_costs_non_TOU,
@@ -498,8 +499,8 @@ for(year in (current_year+1):project_until){
   names(operational_cost_savings)[names(operational_cost_savings) == "temp"] <- paste0("TOU_savings_", year)
 }
 
-operational_cost_savings <- operational_cost_savings %>% 
-  select(-(base_EUL:efficient_opr_costs_non_TOU))
+# operational_cost_savings <- operational_cost_savings %>% 
+#   select(-(base_EUL:efficient_opr_costs_non_TOU))
 
 #applying discount rate of base_year_savings/(1+discount_rate)^(year- current_year)
 
@@ -514,6 +515,10 @@ for(savings_column in names(operational_cost_savings)){
 }
 names(operational_cost_savings) <- original_names
 
+write.xlsx(as.data.frame(operational_cost_savings), 
+           "Potential_Model_Output_Tables/operational_cost_savings.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
 
 # Payback table
 cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
@@ -522,16 +527,16 @@ payback <- function(savings){
   return(cumulative_gain)
 }
 
-operational_cost_savings <- operational_cost_savings %>%
+payback_tables <- operational_cost_savings %>%
   mutate_at(vars(contains("non_TOU_savings")), payback)
 
 cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
 
-operational_cost_savings <- operational_cost_savings %>%
+payback_tables <- payback_tables %>%
   mutate_at(vars(starts_with("TOU_savings")), payback)
 
-write.xlsx(as.data.frame(operational_cost_savings), 
-           "Potential_Model_Output_Tables/operational_costs_savings.xlsx", 
+write.xlsx(as.data.frame(payback_tables), 
+           "Potential_Model_Output_Tables/payback_tables.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
 
