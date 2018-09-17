@@ -239,7 +239,7 @@ write.xlsx(as.data.frame(annual_technical_potential_therms),
            row.names = FALSE,
            sheetName = "R_output")
 
-# Lifetime savings table
+########################################## Lifetime savings table for kwh ########################################## 
 lifetime_savings_kwh <- select(annual_technical_potential_kwh,
                                base_tech_name:EUL,
                                "cumulative_savings" = vars_select(names(annual_technical_potential_kwh),
@@ -298,7 +298,7 @@ for(year in (current_year+2):project_until){
   cumulative_savings_kwh <- cumulative_savings_kwh %>% rowwise() %>%
     mutate(cumulative_savings = ifelse(delivery_type == "ROB",
                                        cumulative_savings + temp,
-                                       ifelse(year == (current_year + (EUL/3)),
+                                       ifelse(year > (current_year + (EUL/3)),
                                               post_RUL_savings,
                                               cumulative_savings)))
   
@@ -314,6 +314,78 @@ for(year in (current_year+2):project_until){
 lifetime_savings_kwh <- lifetime_savings_kwh %>% select(-EUL, -measure)
 
 
+########################################## Lifetime savings table for therms ########################################## 
+lifetime_savings_therms <- select(annual_technical_potential_therms,
+                               base_tech_name:EUL,
+                               "cumulative_savings" = vars_select(names(annual_technical_potential_therms),
+                                                                  contains(as.character(current_year+1)))) %>% 
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+cumulative_savings_therms <- lifetime_savings_therms
+
+names(lifetime_savings_therms)[names(lifetime_savings_therms) == "cumulative_savings"] <- paste0("cumulative_savings_",
+                                                                                           as.character(current_year+1) )
+
+
+post_RUL <- select(annual_technical_potential_therms, base_tech_name:delivery_type)
+ROB_subset <- filter(post_RUL, delivery_type == "ROB")
+RET_subset <- filter(post_RUL, delivery_type == "RET")
+
+RET_subset <- bind_cols(RET_subset, 
+                        "post_RUL_savings" = over_code_therms_savings(installs_per_year$measure_limit[installs_per_year$delivery_type == "RET"])) 
+
+ROB_subset <- bind_cols(ROB_subset, 
+                        "post_RUL_savings" = rep(0, 
+                                                 nrow(filter(annual_technical_potential_therms, 
+                                                             delivery_type == "ROB"))))
+post_RUL <- rbind(ROB_subset,
+                  RET_subset) %>% arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+cumulative_savings_therms <- merge(cumulative_savings_therms, post_RUL, by = c("base_tech_name", 
+                                                                         "efficient_tech_name",
+                                                                         "climate_zone",
+                                                                         "delivery_type",
+                                                                         "building_type",
+                                                                         "measure"))  %>% 
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+
+for(year in (current_year+2):project_until){
+  
+  year_column <- select(annual_technical_potential_therms,
+                        base_tech_name:delivery_type,
+                        vars_select(names(annual_technical_potential_therms),
+                                    contains(as.character(year))))
+  
+  cumulative_savings_therms <- merge(cumulative_savings_therms,
+                                  year_column,
+                                  by = c("base_tech_name", 
+                                         "efficient_tech_name",
+                                         "climate_zone",
+                                         "delivery_type",
+                                         "building_type",
+                                         "measure")) %>% 
+    arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+  
+  names(cumulative_savings_therms)[names(cumulative_savings_therms) == names(cumulative_savings_therms)[ncol(cumulative_savings_therms)]] <- "temp"
+  
+  cumulative_savings_therms <- cumulative_savings_therms %>% rowwise() %>%
+    mutate(cumulative_savings = ifelse(delivery_type == "ROB",
+                                       cumulative_savings + temp,
+                                       ifelse(year > (current_year + (EUL/3)),
+                                              post_RUL_savings,
+                                              cumulative_savings)))
+  
+  cumulative_savings_therms <- select(cumulative_savings_therms, -temp)
+  
+  lifetime_savings_therms <- bind_cols(lifetime_savings_therms,
+                                    "savings" = cumulative_savings_therms$cumulative_savings)
+  
+  names(lifetime_savings_therms)[names(lifetime_savings_therms) == "savings"] <- paste0("cumulative_savings_", year)
+  
+}
+
+lifetime_savings_therms <- lifetime_savings_therms %>% select(-EUL, -measure)
 
 
 
