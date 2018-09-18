@@ -393,7 +393,15 @@ for(year in (current_year+2):project_until){
 
 lifetime_savings_therms <- lifetime_savings_therms %>% select(-EUL, -measure)
 
+write.xlsx(as.data.frame(lifetime_savings_kwh), 
+           "Potential_Model_Output_Tables/lifetime_savings_kwh.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
 
+write.xlsx(as.data.frame(lifetime_savings_therms), 
+           "Potential_Model_Output_Tables/lifetime_savings_therms.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
 
 
 # incremental first year costs -------------------------------------------------------------------------------
@@ -441,6 +449,9 @@ first_year_costs_ROB <- first_year_costs_ROB %>%
 
 first_year_costs <- rbind(first_year_costs_ROB, first_year_costs_RET)
 rm(first_year_costs_RET, first_year_costs_ROB)
+
+first_year_costs <- first_year_costs %>%
+  arrange(base_tech_name, efficient_tech_name, delivery_type)
 
 write.xlsx(as.data.frame(first_year_costs), 
            "Potential_Model_Output_Tables/first_year_costs.xlsx", 
@@ -589,6 +600,9 @@ for(savings_column in names(operational_cost_savings)){
 }
 names(operational_cost_savings) <- original_names
 
+operational_cost_savings <- operational_cost_savings %>%
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
 write.xlsx(as.data.frame(operational_cost_savings), 
            "Potential_Model_Output_Tables/operational_cost_savings.xlsx", 
            row.names = FALSE,
@@ -624,6 +638,15 @@ cashflow_tables <- cashflow_tables %>%
          first_year_incremental_cost,
          non_TOU_savings_2019:TOU_savings_2030) %>%
   arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+non_TOU_cashflow <- select(cashflow_tables, 
+                           base_tech_name:first_year_incremental_cost, 
+                           vars_select(names(cashflow_tables),
+                                       contains("non_TOU")))
+TOU_cash_flow <- select(cashflow_tables, 
+                        base_tech_name:first_year_incremental_cost, 
+                        vars_select(names(cashflow_tables),
+                                    starts_with("TOU_savings")))
 
 write.xlsx(as.data.frame(cashflow_tables), 
            "Potential_Model_Output_Tables/cashflow_tables.xlsx", 
@@ -681,3 +704,31 @@ for(loop_year in (current_year+1):project_until){
                                        "building_type"))
   names(net_emissions)[names(net_emissions) == "ghg_savings"] <- paste0("ghg_savings_", loop_year)
 }                          
+
+write.xlsx(as.data.frame(net_emissions), 
+           "Potential_Model_Output_Tables/net_emissions.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
+
+####################################### Graphing Emissions and costs ##############################################
+
+graphing_emissions<- gather(net_emissions,
+                            year,
+                            ghg_savings,
+                            -(base_tech_name:building_type)) %>% 
+  mutate(year = parse_number(year)) %>% 
+  group_by(base_tech_name, efficient_tech_name, year)
+
+#Emissions savings by measure, taking sum of climate zones and looking only at ROB
+filter(graphing_emissions, delivery_type == "ROB") %>%
+  summarise(ghg_savings_tCO2 = sum(ghg_savings)) %>% 
+  ggplot(aes(x = year, y = ghg_savings_tCO2)) +
+  geom_line(size = 1) + 
+  theme_bw() + 
+  geom_line() +
+  facet_wrap(~ base_tech_name) + 
+  theme(text = element_text(size=9.5),
+        axis.text.x = element_text(angle=15, hjust=1))
+
+
+  

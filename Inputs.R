@@ -578,8 +578,13 @@ rates <- merge(TOU_rates, gas_and_non_TOU_rates,
            by = "climate_zone")
 
 #Adjusting TOU rates to adjust for PGE source of NRDC TOU calculations
+PGE_rate <- select(gas_and_non_TOU_rates, electric_utility, electric_rate) %>% 
+  filter(electric_utility== "PG&E") %>% 
+  distinct()
+
+#For some reason there are two identical PGE entries even after applying distinct(), so choosing first row
 rates <- rates %>% 
-  mutate(NRDC_TOU_rate = NRDC_TOU_rate * electric_rate / 0.2042)
+  mutate(NRDC_TOU_rate = NRDC_TOU_rate * electric_rate / as.numeric(PGE_rate[1,2]))
 
 rm(TOU_rates, gas_and_non_TOU_rates)
 
