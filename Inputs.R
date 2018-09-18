@@ -636,13 +636,26 @@ loadshapes <- loadshapes %>%
   select(-annual_input_kwh, 
          -input_kwh)
  
+loadshapes <- loadshapes %>% 
+  mutate(hour_8760 = rep(1:8760, times = 2 * length(climate_zone_list$climate_zone)))
+
+loadshapes <- loadshapes %>%
+  select(loadshape_label,
+         climate_zone,
+         day_of_year,
+         hour,
+         hour_8760,
+         loadshape)
+
 fwrite(as.data.frame(loadshapes), 
        "Input_to_Input_Tables/loadshapes.csv", 
        row.names = FALSE)
 
 # Operational Costs for each year operations
 #merging loadshape with rates
-operational_costs_8760 <- merge(loadshapes, rates, by = c("climate_zone", "day_of_year", "hour")) %>%
+operational_costs_8760 <- merge(select(loadshapes, -"hour_8760"), 
+                                rates, 
+                                by = c("climate_zone", "day_of_year", "hour")) %>%
   arrange(climate_zone, loadshape_label, hour_of_year)
 
 #merging with tech_groups
@@ -701,5 +714,65 @@ write.xlsx(as.data.frame(annual_operational_costs),
            row.names = FALSE,
            sheetName = "R_input")
 
+############################################## Marginal GHGs ####################################################
+# converting tCO2/kWh = tCO2/MWh / 1000
+
+# marginal greenhouse gas emissions
+ghg_emissions_kwh <- tbl_df(read_excel("Input_to_Input_Tables/marginal_emissions.xlsx", 
+                                       sheet = "R_input_kwh"))
+ghg_emissions_therms <- tbl_df(read_excel("Input_to_Input_Tables/marginal_emissions.xlsx", 
+                                          sheet = "R_input_therms"))
+
+ghg_emissions_kwh <- mutate_at(ghg_emissions_kwh, 
+                               vars(-hour),
+                               funs(./1000))
+
+ghg_emissions_kwh <- gather(ghg_emissions_kwh,
+                            year,
+                            tCO2_per_kwh,
+                            "2018":"2030",
+                            -hour)
+
+ghg_emissions_therms <- gather(ghg_emissions_therms,
+                            year,
+                            tCO2_per_therm,
+                            "2018":"2030",
+                            -hour)
+
+ghg_loadshape_kwh <- merge(ghg_emissions_kwh, 
+                           select(loadshapes,
+                                  -day_of_year,
+                                  -hour),
+                           by.x = "hour",
+                           by.y = "hour_8760")
+
+ghg_loadshape_kwh <- ghg_loadshape_kwh %>% 
+  group_by(climate_zone, year)
+
+ghg_loadshape_kwh <- summarise(ghg_loadshape_kwh,
+                               weighted_tCO2_per_kwh = sum(loadshape * tCO2_per_kwh))
+
+ghg_loadshape_therms <- merge(ghg_emissions_therms, 
+                           select(loadshapes,
+                                  -day_of_year,
+                                  -hour),
+                           by.x = "hour",
+                           by.y = "hour_8760")
+
+ghg_loadshape_therms <- ghg_loadshape_therms %>% 
+  group_by(climate_zone, year)
+
+ghg_loadshape_therms <- summarise(ghg_loadshape_therms,
+                               weighted_tCO2_per_therm = sum(loadshape * tCO2_per_therm))
+
+write.xlsx(as.data.frame(ghg_loadshape_kwh), 
+           "Potential_Model_Input_Tables/ghg_loadshape.xlsx", 
+           row.names = FALSE,
+           sheetName = "electric")
+write.xlsx(as.data.frame(ghg_loadshape_therms), 
+           "Potential_Model_Input_Tables/ghg_loadshape.xlsx", 
+           row.names = FALSE,
+           append = TRUE,
+           sheetName = "gas")
 
 

@@ -40,6 +40,12 @@ annual_operational_costs <- tbl_df(read_excel("Potential_Model_Input_Tables/annu
 # rate change projection by utility
 rate_pct_change <- tbl_df(read_excel("Input_to_Input_Tables/climate_zone_rate_mapping.xlsx", sheet = "forecast"))
 
+# rate change projection by utility
+ghg_loadshapes_kwh <- tbl_df(read_excel("Potential_Model_Input_Tables/ghg_loadshape.xlsx", sheet = "electric"))
+ghg_loadshapes_therms <- tbl_df(read_excel("Potential_Model_Input_Tables/ghg_loadshape.xlsx", sheet = "gas"))
+
+
+
 # Per Unit Savings Table -----------------------------------------------------------
 
 per_unit_savings_table <- merge(measure_table, 
@@ -588,40 +594,90 @@ write.xlsx(as.data.frame(operational_cost_savings),
            row.names = FALSE,
            sheetName = "R_output")
 
-# Payback table
+# Cashflow table
 cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
-payback <- function(savings){
+cashflow <- function(savings){
   cumulative_gain <<- cumulative_gain + savings
   return(cumulative_gain)
 }
 
-payback_tables <- operational_cost_savings %>%
-  mutate_at(vars(contains("non_TOU_savings")), payback)
+cashflow_tables <- operational_cost_savings %>%
+  mutate_at(vars(contains("non_TOU_savings")), cashflow)
 
 cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
 
-payback_tables <- payback_tables %>%
-  mutate_at(vars(starts_with("TOU_savings")), payback)
+cashflow_tables <- cashflow_tables %>%
+  mutate_at(vars(starts_with("TOU_savings")), cashflow)
 
-payback_tables <- merge(payback_tables, first_year_costs, 
+cashflow_tables <- merge(cashflow_tables, first_year_costs, 
                         by = c("base_tech_name", 
                                "code_tech_name", 
                                "efficient_tech_name", 
                                "delivery_type", 
                                "building_type"))
 
-payback_tables <- payback_tables %>%
+cashflow_tables <- cashflow_tables %>%
   mutate(first_year_incremental_cost = -1 * first_year_incremental_cost)
 
-payback_tables <- payback_tables %>%
+cashflow_tables <- cashflow_tables %>%
   select(base_tech_name:climate_zone,
          first_year_incremental_cost,
          non_TOU_savings_2019:TOU_savings_2030) %>%
   arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
 
-write.xlsx(as.data.frame(payback_tables), 
-           "Potential_Model_Output_Tables/payback_tables.xlsx", 
+write.xlsx(as.data.frame(cashflow_tables), 
+           "Potential_Model_Output_Tables/cashflow_tables.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
 
+############################################## GHG Analysis #########################################################
 
+net_emissions <- select(lifetime_savings_kwh,
+                        base_tech_name:delivery_type)
+
+for(loop_year in (current_year+1):project_until){
+  kwh_column <- select(lifetime_savings_kwh,
+                        base_tech_name:delivery_type,
+                        vars_select(names(lifetime_savings_kwh),
+                                    contains(as.character(loop_year))))
+  year_ghg_loadshape <- filter(ghg_loadshapes_kwh,
+                               year == loop_year)
+  
+  newcol_kwh <- merge(kwh_column, year_ghg_loadshape, by = "climate_zone")
+  newcol_kwh <- newcol_kwh %>% 
+    mutate_at(vars(contains("savings")), funs(.*weighted_tCO2_per_kwh)) %>%
+    rename_at(vars(contains("savings")), funs(paste0("ghg_kwh"))) %>%
+    select(-year, -weighted_tCO2_per_kwh)
+  
+  therm_column <- select(lifetime_savings_therms,
+                       base_tech_name:delivery_type,
+                       vars_select(names(lifetime_savings_therms),
+                                   contains(as.character(loop_year))))
+  year_ghg_loadshape <- filter(ghg_loadshapes_therms,
+                               year == loop_year)
+  newcol_therms <- merge(therm_column, year_ghg_loadshape, by = "climate_zone")
+  newcol_therms <- newcol_therms %>% 
+    mutate_at(vars(contains("savings")), funs(.*weighted_tCO2_per_therm)) %>%
+    rename_at(vars(contains("savings")), funs(paste0("ghg_therms"))) %>%
+    select(-year, -weighted_tCO2_per_therm)
+  
+  new_col <- merge(newcol_kwh, 
+                   newcol_therms, 
+                   by = c("base_tech_name", 
+                          "efficient_tech_name",
+                          "climate_zone", 
+                          "delivery_type", 
+                          "building_type"))
+  new_col <- new_col %>% 
+    mutate(ghg_savings = ghg_kwh + ghg_therms) %>% 
+    select(-ghg_kwh, -ghg_therms)
+  
+  net_emissions <- merge(net_emissions,
+                         new_col,
+                         by = c("base_tech_name", 
+                                       "efficient_tech_name",
+                                       "climate_zone", 
+                                       "delivery_type", 
+                                       "building_type"))
+  names(net_emissions)[names(net_emissions) == "ghg_savings"] <- paste0("ghg_savings_", loop_year)
+}                          
