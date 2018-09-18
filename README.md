@@ -119,6 +119,8 @@ Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
 
+For gas rates, CZ 4 is average of SCG and PGE  
+
 Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones  
 
 GHG Marginal Emissions from CPUC Avoided Cost Calculator 2018 prepared by E3  
