@@ -657,6 +657,7 @@ write.xlsx(as.data.frame(TOU_cashflow_tables),
            sheetName = "R_output")
 
 
+
 ############################################## GHG Analysis #########################################################
 
 net_emissions <- select(lifetime_savings_kwh,
@@ -734,5 +735,49 @@ filter(graphing_emissions, delivery_type == "ROB") %>%
   theme(text = element_text(size=9.5),
         axis.text.x = element_text(angle=15, hjust=1))
 
+#Graphing cashflow
 
+graphing_non_TOU_cashflow <- gather(non_TOU_cashflow_tables,
+                                    year,
+                                    cashflow,
+                                    -(base_tech_name:first_year_incremental_cost)) %>% 
+  mutate(year = parse_number(year)) %>% 
+  group_by(base_tech_name, efficient_tech_name, year)
+
+#average of all climate zones
+filter(graphing_non_TOU_cashflow, delivery_type == "ROB") %>%
+  summarise(cashflow = mean(cashflow)) %>% 
+  ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0) + 
+  theme_bw() +
+  geom_line() +
+  facet_wrap(~ base_tech_name) +
+  theme(text = element_text(size=9.5),
+        axis.text.x = element_text(angle=15, hjust=1)) + 
+  ggtitle("Non-TOU Cashflow from 2019-2030") +
+  labs(x="Year",y="Net Savings ($)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18))
   
+graphing_TOU_cashflow <- gather(TOU_cashflow_tables,
+                                    year,
+                                    cashflow,
+                                    -(base_tech_name:first_year_incremental_cost)) %>% 
+  mutate(year = parse_number(year)) %>% 
+  group_by(base_tech_name, efficient_tech_name, year)
+
+filter(graphing_TOU_cashflow, delivery_type == "ROB") %>%
+  summarise(cashflow = mean(cashflow)) %>% 
+  ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
+  geom_line(size = 1) +
+  geom_hline(yintercept = 0) + 
+  theme_bw() +
+  geom_line() +
+  facet_wrap(~ base_tech_name) +
+  theme(text = element_text(size=9.5),
+        axis.text.x = element_text(angle=15, hjust=1)) + 
+  ggtitle("TOU Cashflow from 2019-2030") +
+  labs(x="Year",y="Net Savings ($)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18))
