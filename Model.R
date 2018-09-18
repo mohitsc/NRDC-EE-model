@@ -5,6 +5,7 @@ library(dplyr)
 library(tidyr)
 library(readxl)
 library(ggplot2)
+library(ggrepel)
 library(xlsx)
 library(readr)
 library(tidyselect)
@@ -656,7 +657,54 @@ write.xlsx(as.data.frame(TOU_cashflow_tables),
            row.names = FALSE,
            sheetName = "R_output")
 
+# Estimating total societal spending by applying installs in each CZ to per unit savings
+non_TOU_cashflow_2022 <- gather(non_TOU_cashflow_tables,
+                                    year,
+                                    cashflow,
+                                    -(base_tech_name:first_year_incremental_cost)) %>% 
+  mutate(year = parse_number(year)) %>% filter(year == 2022)
 
+non_TOU_cashflow_2022 <- non_TOU_cashflow_2022 %>% rowwise() %>% 
+  mutate(unit_spending = ifelse(cashflow < 0, 0 - cashflow, 0)) %>% 
+  select(-code_tech_name, -first_year_incremental_cost, -year, -cashflow)
+
+spending <- merge(non_TOU_cashflow_2022, select(installs_per_year, 
+                                                -base_population_start, 
+                                                -EUL, 
+                                                -measure_limit, 
+                                                -cumulative_installs),
+                  by = c("base_tech_name", 
+                         "efficient_tech_name",
+                         "climate_zone",
+                         "delivery_type", 
+                         "building_type"))
+
+spending <- spending %>% mutate_at(vars(contains("installs")), funs(.*unit_spending)) %>%
+  rename_at(vars(contains("installs")), funs(paste0("spending_", parse_number(.))))
+
+original_names <- names(spending)
+
+for(spending_column in names(spending)){
+  if(grepl("spending_", spending_column)){
+    temp1 = spending[spending_column]/(1 + discount_rate)^(parse_number(spending_column) - current_year)
+    spending <- bind_cols(spending, temp1)
+    spending <- spending[ , !(names(spending) == spending_column)]
+  }
+}
+names(spending) <- original_names
+
+spending <- spending  %>%
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+spending <- spending %>% 
+  group_by(base_tech_name, efficient_tech_name, delivery_type) %>% 
+  summarise_at(vars(contains("spending_")), sum) 
+
+spending %>% 
+  rowwise() %>% 
+  mutate(total_spending = sum(vars_select(names(spending), contains("spending_")))) %>%
+  select(-vars_select(names(spending), contains("spending_"))) %>%
+  View()
 
 ############################################## GHG Analysis #########################################################
 
@@ -722,18 +770,24 @@ graphing_emissions<- gather(net_emissions,
                             ghg_savings,
                             -(base_tech_name:building_type)) %>% 
   mutate(year = parse_number(year)) %>% 
-  group_by(base_tech_name, efficient_tech_name, year)
+  group_by(base_tech_name, year)
 
 #Emissions savings by measure, taking sum of climate zones and looking only at ROB
 filter(graphing_emissions, delivery_type == "ROB") %>%
-  summarise(ghg_savings_tCO2 = sum(ghg_savings)) %>% 
-  ggplot(aes(x = year, y = ghg_savings_tCO2)) +
+  summarise(ghg_savings_mmtCO2 = as.integer(sum(ghg_savings))/(10^6)) %>% 
+  ggplot(aes(x = year, y = ghg_savings_mmtCO2, label=ifelse(year== 2019 | year == 2030, ghg_savings_mmtCO2,''))) +
   geom_line(size = 1) + 
   theme_bw() + 
-  geom_line() +
+  geom_point() +
   facet_wrap(~ base_tech_name) + 
   theme(text = element_text(size=9.5),
-        axis.text.x = element_text(angle=15, hjust=1))
+        axis.text.x = element_text(angle=15, hjust=1)) +
+  geom_text_repel(point.padding = 0.5) +
+  ggtitle("Statewide Lifetime GHG savings") +
+  labs(x="Year",y="GHG Savings (MMT CO2)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18)) + 
+  scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
 
 #Graphing cashflow
 
@@ -749,16 +803,19 @@ filter(graphing_non_TOU_cashflow, delivery_type == "ROB") %>%
   summarise(cashflow = mean(cashflow)) %>% 
   ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
   geom_line(size = 1) +
-  geom_hline(yintercept = 0) + 
-  theme_bw() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 2022, linetype = "dashed") + 
+  geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 4, angle = 90) + 
+  theme_bw() + 
   geom_line() +
   facet_wrap(~ base_tech_name) +
   theme(text = element_text(size=9.5),
-        axis.text.x = element_text(angle=15, hjust=1)) + 
-  ggtitle("Non-TOU Cashflow from 2019-2030") +
+        axis.text.x = element_text(angle=15, hjust= 1)) + 
+  ggtitle("Non-TOU Cashflow for each Base Model") +
   labs(x="Year",y="Net Savings ($)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
-  theme(axis.title = element_text(size=18))
+  theme(axis.title = element_text(size=18)) + 
+  scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
   
 graphing_TOU_cashflow <- gather(TOU_cashflow_tables,
                                     year,
@@ -772,12 +829,15 @@ filter(graphing_TOU_cashflow, delivery_type == "ROB") %>%
   ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
   geom_line(size = 1) +
   geom_hline(yintercept = 0) + 
+  geom_vline(xintercept = 2022, linetype = "dashed") +
+  geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 4, angle = 90) +
   theme_bw() +
   geom_line() +
   facet_wrap(~ base_tech_name) +
   theme(text = element_text(size=9.5),
         axis.text.x = element_text(angle=15, hjust=1)) + 
-  ggtitle("TOU Cashflow from 2019-2030") +
+  ggtitle("TOU Cashflow for each Base Model") +
   labs(x="Year",y="Net Savings ($)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
-  theme(axis.title = element_text(size=18))
+  theme(axis.title = element_text(size=18)) + 
+  scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
