@@ -609,49 +609,53 @@ write.xlsx(as.data.frame(operational_cost_savings),
            sheetName = "R_output")
 
 # Cashflow table
-cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
+cashflow_tables <- merge(operational_cost_savings, first_year_costs, 
+                         by = c("base_tech_name", 
+                                "code_tech_name", 
+                                "efficient_tech_name", 
+                                "delivery_type", 
+                                "building_type"))
+
+cashflow_tables <- cashflow_tables %>%
+  mutate(first_year_incremental_cost = -1 * first_year_incremental_cost)
+
+cumulative_gain <- cashflow_tables$first_year_incremental_cost
+
+#run this function only when savings = 0 in the environment 
 cashflow <- function(savings){
   cumulative_gain <<- cumulative_gain + savings
   return(cumulative_gain)
 }
 
-cashflow_tables <- operational_cost_savings %>%
-  mutate_at(vars(contains("non_TOU_savings")), cashflow)
-
-cumulative_gain <- -1 * (first_year_costs$first_year_incremental_cost)
-
-cashflow_tables <- cashflow_tables %>%
-  mutate_at(vars(starts_with("TOU_savings")), cashflow)
-
-cashflow_tables <- merge(cashflow_tables, first_year_costs, 
-                        by = c("base_tech_name", 
-                               "code_tech_name", 
-                               "efficient_tech_name", 
-                               "delivery_type", 
-                               "building_type"))
-
-cashflow_tables <- cashflow_tables %>%
-  mutate(first_year_incremental_cost = -1 * first_year_incremental_cost)
-
-cashflow_tables <- cashflow_tables %>%
+non_TOU_cashflow_tables <- cashflow_tables %>%
+  mutate_at(vars(contains("non_TOU_savings")), cashflow) %>% 
   select(base_tech_name:climate_zone,
-         first_year_incremental_cost,
-         non_TOU_savings_2019:TOU_savings_2030) %>%
+         first_year_incremental_cost, 
+         vars_select(names(cashflow_tables),
+                     contains("non_TOU"))) %>%
   arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
 
-non_TOU_cashflow <- select(cashflow_tables, 
-                           base_tech_name:first_year_incremental_cost, 
-                           vars_select(names(cashflow_tables),
-                                       contains("non_TOU")))
-TOU_cash_flow <- select(cashflow_tables, 
-                        base_tech_name:first_year_incremental_cost, 
-                        vars_select(names(cashflow_tables),
-                                    starts_with("TOU_savings")))
+cumulative_gain <- cashflow_tables$first_year_incremental_cost
 
-write.xlsx(as.data.frame(cashflow_tables), 
-           "Potential_Model_Output_Tables/cashflow_tables.xlsx", 
+TOU_cashflow_tables <- cashflow_tables %>%
+  mutate_at(vars(starts_with("TOU_savings")), cashflow) %>% 
+  select(base_tech_name:climate_zone,
+         first_year_incremental_cost, 
+         vars_select(names(cashflow_tables),
+                     starts_with("TOU_savings"))) %>%
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+
+write.xlsx(as.data.frame(non_TOU_cashflow_tables), 
+           "Potential_Model_Output_Tables/non_TOU_cashflow_tables.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
+
+write.xlsx(as.data.frame(TOU_cashflow_tables), 
+           "Potential_Model_Output_Tables/TOU_cashflow_tables.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_output")
+
 
 ############################################## GHG Analysis #########################################################
 
