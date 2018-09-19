@@ -458,37 +458,6 @@ write.xlsx(as.data.frame(first_year_costs),
            "Potential_Model_Output_Tables/first_year_costs.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
-# 
-# #Total first year costs including installs
-# RET_subset <- filter(technical_potential, delivery_type == "RET")
-# ROB_subset <- filter(technical_potential, delivery_type == "ROB")
-# 
-# #adding ROB costs column
-# total_first_year_costs_ROB <- merge(select(ROB_subset, 
-#                                        base_tech_name, 
-#                                        efficient_tech_name, 
-#                                        climate_zone, 
-#                                        delivery_type, 
-#                                        building_type,
-#                                        vars_select(names(installs_per_year), contains("installs"))),
-#                                 first_year_costs_ROB,
-#                                 by = c("base_tech_name", 
-#                                        "efficient_tech_name", 
-#                                        "delivery_type", 
-#                                        "building_type"))
-#                                 
-# total_first_year_costs_ROB <- mutate_at(total_first_year_costs_ROB, 
-#                                     vars(contains("installs")), 
-#                                     funs(. * incremental_first_year_cost)) 
-# 
-# total_first_year_costs_ROB <- rename_at(total_first_year_costs_ROB,
-#                                     vars(contains("installs_")), 
-#                                     funs(paste0("costs_", parse_number(.)))) %>%
-#   rename("cumulative_costs" = cumulative_installs)
-# 
-# total_first_year_costs <- total_first_year_costs %>% 
-#   mutate(cumulative_costs = rowSums(select(., contains("costs_"))))
-# 
 
 # Operational cost savings for years between 2019 and 2030-------------------------------------------------------------------------------
 
@@ -646,6 +615,51 @@ TOU_cashflow_tables <- cashflow_tables %>%
                      starts_with("TOU_savings"))) %>%
   arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
 
+TOU_cashflow_tables <- merge(TOU_cashflow_tables, 
+                             select(technology_list, tech_name, EUL), 
+                             by.x = "base_tech_name",
+                             by.y = "tech_name")
+
+non_TOU_cashflow_tables <- merge(non_TOU_cashflow_tables, 
+                             select(technology_list, tech_name, EUL), 
+                             by.x = "base_tech_name",
+                             by.y = "tech_name")
+
+for(year in (current_year+1):project_until){
+  year_column <- select(TOU_cashflow_tables,
+                        base_tech_name:first_year_incremental_cost,
+                        EUL,
+                        temp = vars_select(names(TOU_cashflow_tables),
+                                    contains(as.character(year))))
+  
+  name <- vars_select(names(TOU_cashflow_tables),
+              contains(as.character(year))) 
+  
+  year_column <- year_column %>% mutate(temp = ifelse((delivery_type == "RET") & (year > (current_year + EUL/3)),
+                                           temp - first_year_incremental_cost,
+                                           temp))
+  
+  TOU_cashflow_tables[name] <- year_column$temp
+  
+  year_column <- select(non_TOU_cashflow_tables,
+                        base_tech_name:first_year_incremental_cost,
+                        EUL,
+                        temp = vars_select(names(non_TOU_cashflow_tables),
+                                           contains(as.character(year))))
+  
+  name <- vars_select(names(non_TOU_cashflow_tables),
+                      contains(as.character(year))) 
+  
+  year_column <- year_column %>% mutate(temp = ifelse((delivery_type == "RET") & (year > (current_year + EUL/3)),
+                                                      temp - first_year_incremental_cost,
+                                                      temp))
+  
+  non_TOU_cashflow_tables[name] <- year_column$temp
+  
+}
+
+TOU_cashflow_tables <- select(TOU_cashflow_tables, -EUL)
+non_TOU_cashflow_tables <- select(non_TOU_cashflow_tables, -EUL)
 
 write.xlsx(as.data.frame(non_TOU_cashflow_tables), 
            "Potential_Model_Output_Tables/non_TOU_cashflow_tables.xlsx", 
@@ -657,7 +671,7 @@ write.xlsx(as.data.frame(TOU_cashflow_tables),
            row.names = FALSE,
            sheetName = "R_output")
 
-# Estimating total societal spending by applying installs in each CZ to per unit savings
+################### Estimating total non TOU societal spending by applying installs in each CZ to per unit savings ###################
 non_TOU_cashflow_2022 <- gather(non_TOU_cashflow_tables,
                                     year,
                                     cashflow,
@@ -668,7 +682,7 @@ non_TOU_cashflow_2022 <- non_TOU_cashflow_2022 %>% rowwise() %>%
   mutate(unit_spending = ifelse(cashflow < 0, 0 - cashflow, 0)) %>% 
   select(-code_tech_name, -first_year_incremental_cost, -year, -cashflow)
 
-spending <- merge(non_TOU_cashflow_2022, select(installs_per_year, 
+non_TOU_spending <- merge(non_TOU_cashflow_2022, select(installs_per_year, 
                                                 -base_population_start, 
                                                 -EUL, 
                                                 -measure_limit, 
@@ -679,32 +693,79 @@ spending <- merge(non_TOU_cashflow_2022, select(installs_per_year,
                          "delivery_type", 
                          "building_type"))
 
-spending <- spending %>% mutate_at(vars(contains("installs")), funs(.*unit_spending)) %>%
+non_TOU_spending <- non_TOU_spending %>% mutate_at(vars(contains("installs")), funs(.*unit_spending)) %>%
   rename_at(vars(contains("installs")), funs(paste0("spending_", parse_number(.))))
 
-original_names <- names(spending)
+original_names <- names(non_TOU_spending)
 
-for(spending_column in names(spending)){
+for(spending_column in names(non_TOU_spending)){
   if(grepl("spending_", spending_column)){
-    temp1 = spending[spending_column]/(1 + discount_rate)^(parse_number(spending_column) - current_year)
-    spending <- bind_cols(spending, temp1)
-    spending <- spending[ , !(names(spending) == spending_column)]
+    temp1 = non_TOU_spending[spending_column]/(1 + discount_rate)^(parse_number(spending_column) - current_year)
+    non_TOU_spending <- bind_cols(non_TOU_spending, temp1)
+    non_TOU_spending <- non_TOU_spending[ , !(names(non_TOU_spending) == spending_column)]
   }
 }
-names(spending) <- original_names
+names(non_TOU_spending) <- original_names
 
-spending <- spending  %>%
+non_TOU_spending <- non_TOU_spending  %>%
   arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
 
-spending <- spending %>% 
+non_TOU_spending <- non_TOU_spending %>% 
   group_by(base_tech_name, efficient_tech_name, delivery_type) %>% 
   summarise_at(vars(contains("spending_")), sum) 
 
-spending %>% 
+total_non_TOU_spending <- non_TOU_spending %>% 
   rowwise() %>% 
-  mutate(total_spending = sum(vars_select(names(spending), contains("spending_")))) %>%
-  select(-vars_select(names(spending), contains("spending_"))) %>%
-  View()
+  mutate(total_spending = sum(spending_2019:spending_2030)) %>% 
+  select(base_tech_name:delivery_type, total_spending)
+
+################### Estimating total non TOU societal spending by applying installs in each CZ to per unit savings ###################
+TOU_cashflow_2022 <- gather(TOU_cashflow_tables,
+                                year,
+                                cashflow,
+                                -(base_tech_name:first_year_incremental_cost)) %>% 
+  mutate(year = parse_number(year)) %>% filter(year == 2022)
+
+TOU_cashflow_2022 <- TOU_cashflow_2022 %>% rowwise() %>% 
+  mutate(unit_spending = ifelse(cashflow < 0, 0 - cashflow, 0)) %>% 
+  select(-code_tech_name, -first_year_incremental_cost, -year, -cashflow)
+
+TOU_spending <- merge(TOU_cashflow_2022, select(installs_per_year, 
+                                                        -base_population_start, 
+                                                        -EUL, 
+                                                        -measure_limit, 
+                                                        -cumulative_installs),
+                          by = c("base_tech_name", 
+                                 "efficient_tech_name",
+                                 "climate_zone",
+                                 "delivery_type", 
+                                 "building_type"))
+
+TOU_spending <- TOU_spending %>% mutate_at(vars(contains("installs")), funs(.*unit_spending)) %>%
+  rename_at(vars(contains("installs")), funs(paste0("spending_", parse_number(.))))
+
+original_names <- names(TOU_spending)
+
+for(spending_column in names(TOU_spending)){
+  if(grepl("spending_", spending_column)){
+    temp1 = TOU_spending[spending_column]/(1 + discount_rate)^(parse_number(spending_column) - current_year)
+    TOU_spending <- bind_cols(TOU_spending, temp1)
+    TOU_spending <- TOU_spending[ , !(names(TOU_spending) == spending_column)]
+  }
+}
+names(TOU_spending) <- original_names
+
+TOU_spending <- TOU_spending  %>%
+  arrange(base_tech_name, efficient_tech_name, climate_zone, delivery_type)
+
+TOU_spending <- TOU_spending %>% 
+  group_by(base_tech_name, efficient_tech_name, delivery_type) %>% 
+  summarise_at(vars(contains("spending_")), sum) 
+
+total_TOU_spending <- TOU_spending %>% 
+  rowwise() %>% 
+  mutate(total_spending = sum(spending_2019:spending_2030)) %>% 
+  select(base_tech_name:delivery_type, total_spending)
 
 ############################################## GHG Analysis #########################################################
 
@@ -799,7 +860,7 @@ graphing_non_TOU_cashflow <- gather(non_TOU_cashflow_tables,
   group_by(base_tech_name, efficient_tech_name, year)
 
 #average of all climate zones
-filter(graphing_non_TOU_cashflow, delivery_type == "ROB") %>%
+filter(graphing_non_TOU_cashflow, delivery_type == "RET") %>%
   summarise(cashflow = mean(cashflow)) %>% 
   ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
   geom_line(size = 1) +
