@@ -6,6 +6,9 @@ Data sources within PG Study:
 California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012  
 California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
 
+Useful EnergyStar description of HPWH: “To move the heat, heat pumps work like a refrigerator in reverse. While a refrigerator pulls heat from inside a box and dumps it into the surrounding room, a stand-alone air-source heat pump water heater pulls heat from the surrounding air and dumps it -- at a higher temperature -- into a tank to heat water.”  
+
+
 --------------------------------------------------------------------------------------------------------------------------------------
 Github system and planning to review the model:  
 Enables version control  
@@ -21,6 +24,8 @@ Have a gas water heater (data collected by climate zone)
 Have an electric gas water heater (data collected by climate zone)  
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
 
+BIG ASSUMPTION: TOTAL NUMBER OF WATER HEATERS REMAINS THE SAME  
+
 --------------------------------------------------------------------------------------------------------------------------------------
 Saturation data
 CLASS 2012: Efficiency Factor distribution of each CZ
@@ -30,7 +35,7 @@ For Electric: CZ 4 and 8 and 15 are average of the rest
 
 --------------------------------------------------------------------------------------------------------------------------------------
 
-Pierre HPWH data for HPWH performance by CZ, location  
+Pierre HPWH Ecotop 2016 data for HPWH performance by CZ, location: https://www.dropbox.com/sh/031btkwxhr3gfkv/AABtX0Mv6YBkClBdMeHGG_Kpa?dl=0    
 Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)  
 Selecting GE2014 because most efficient non-CO2 powered HPWH  
 
@@ -39,6 +44,7 @@ Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption *
 1.1 because of difference in COP and UEF (actual vs. rated performance)      
 Technical Potential = per unit savings * installable measures    
 base_consumption_therms = 0.03412956 * base_consumption_kwh  
+Variability of ER and gas water heaters probably won't be as much as EHP (overall usage will be similar but efficiency fluctuation won't be as much as EHP)  
 
 Weighting by location from NEEA:    
 NEEA Residential Building Stock Assessment 2016/2017  
@@ -114,7 +120,8 @@ https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf
 https://www.energy.ca.gov/maps/serviceareas/CA_Electric_Investor_Owned_Utilities_IOUs.pdf  
 https://www.energy.ca.gov/maps/serviceareas/Electric_Utility_Service_Areas.pdf  
 
-TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
+TOU rates from Pierre Ecotope 2018 flexibility study data for climate zones 1:5, 11:13  
+https://aceee.org/sites/default/files/pdf/conferences/hwf/2018/2a-delforge.pdf  
 Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
