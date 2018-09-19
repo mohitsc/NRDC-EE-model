@@ -255,10 +255,12 @@ lifetime_savings_kwh <- select(annual_technical_potential_kwh,
 
 cumulative_savings_kwh <- lifetime_savings_kwh
 
+names(cumulative_savings_kwh)[names(cumulative_savings_kwh) == "cumulative_savings"] <- "cumulative_savings_first_year"
+
 names(lifetime_savings_kwh)[names(lifetime_savings_kwh) == "cumulative_savings"] <- paste0("cumulative_savings_",
                                                                                            as.character(current_year+1) )
-
-
+                                                                                           
+cumulative_savings_kwh <- cumulative_savings_kwh %>% mutate("cumulative_savings" = cumulative_savings_first_year)
 
 post_RUL <- select(annual_technical_potential_kwh, base_tech_name:delivery_type)
 ROB_subset <- filter(post_RUL, delivery_type == "ROB")
@@ -306,8 +308,8 @@ for(year in (current_year+2):project_until){
     mutate(cumulative_savings = ifelse(delivery_type == "ROB",
                                        cumulative_savings + temp,
                                        ifelse(year > (current_year + (EUL/3)),
-                                              post_RUL_savings,
-                                              cumulative_savings)))
+                                              cumulative_savings + post_RUL_savings,
+                                              cumulative_savings + cumulative_savings_first_year)))
   
   cumulative_savings_kwh <- select(cumulative_savings_kwh, -temp)
   
@@ -330,8 +332,12 @@ lifetime_savings_therms <- select(annual_technical_potential_therms,
 
 cumulative_savings_therms <- lifetime_savings_therms
 
+names(cumulative_savings_therms)[names(cumulative_savings_therms) == "cumulative_savings"] <- "cumulative_savings_first_year"
+
 names(lifetime_savings_therms)[names(lifetime_savings_therms) == "cumulative_savings"] <- paste0("cumulative_savings_",
                                                                                            as.character(current_year+1) )
+
+cumulative_savings_therms <- cumulative_savings_therms %>% mutate("cumulative_savings" = cumulative_savings_first_year)
 
 
 post_RUL <- select(annual_technical_potential_therms, base_tech_name:delivery_type)
@@ -380,8 +386,8 @@ for(year in (current_year+2):project_until){
     mutate(cumulative_savings = ifelse(delivery_type == "ROB",
                                        cumulative_savings + temp,
                                        ifelse(year > (current_year + (EUL/3)),
-                                              post_RUL_savings,
-                                              cumulative_savings)))
+                                              cumulative_savings + post_RUL_savings,
+                                              cumulative_savings + cumulative_savings_first_year)))
   
   cumulative_savings_therms <- select(cumulative_savings_therms, -temp)
   
@@ -864,7 +870,7 @@ graphing_emissions<- gather(net_emissions,
   group_by(base_tech_name, year)
 
 #Emissions savings by measure, taking sum of climate zones and looking only at ROB
-filter(graphing_emissions, delivery_type == "ROB") %>%
+graphing_emissions %>%
   summarise(ghg_savings_mmtCO2 = as.integer(sum(ghg_savings))/(10^6)) %>% 
   ggplot(aes(x = year, y = ghg_savings_mmtCO2, label=ifelse(year== 2019 | year == 2030, ghg_savings_mmtCO2,''))) +
   geom_line(size = 1) + 
