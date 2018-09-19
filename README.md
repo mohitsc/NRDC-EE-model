@@ -41,6 +41,7 @@ Calculating per unit kwh consumption of base measure by 1.1 * HPWH_consumption *
 1.1 because of difference in COP and UEF (actual vs. rated performance)      
 Technical Potential = per unit savings * installable measures    
 base_consumption_therms = 0.03412956 * base_consumption_kwh  
+Variability of ER and gas water heaters probably won't be as much as EHP (overall usage will be similar but efficiency fluctuation won't be as much as EHP)  
 
 Weighting by location from NEEA:    
 NEEA Residential Building Stock Assessment 2016/2017  
