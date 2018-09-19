@@ -21,6 +21,8 @@ Have a gas water heater (data collected by climate zone)
 Have an electric gas water heater (data collected by climate zone)  
 Selection of “Single Family”, “Townhouse, Duplex, Row House” and “Apt Condo 2-4 Units”  
 
+BIG ASSUMPTION: TOTAL NUMBER OF WATER HEATERS REMAINS THE SAME  
+
 --------------------------------------------------------------------------------------------------------------------------------------
 Saturation data
 CLASS 2012: Efficiency Factor distribution of each CZ
