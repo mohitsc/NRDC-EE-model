@@ -30,7 +30,7 @@ For Electric: CZ 4 and 8 and 15 are average of the rest
 
 --------------------------------------------------------------------------------------------------------------------------------------
 
-Pierre HPWH data for HPWH performance by CZ, location  
+Pierre HPWH Ecotop 2016 data for HPWH performance by CZ, location: https://www.dropbox.com/sh/031btkwxhr3gfkv/AABtX0Mv6YBkClBdMeHGG_Kpa?dl=0    
 Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)  
 Selecting GE2014 because most efficient non-CO2 powered HPWH  
 
@@ -114,7 +114,8 @@ https://www.energy.ca.gov/maps/serviceareas/natural_gas_service_areas.pdf
 https://www.energy.ca.gov/maps/serviceareas/CA_Electric_Investor_Owned_Utilities_IOUs.pdf  
 https://www.energy.ca.gov/maps/serviceareas/Electric_Utility_Service_Areas.pdf  
 
-TOU rates from Pierre Ecotope Data for climate zones 1:5, 11:13
+TOU rates from Pierre Ecotope 2018 flexibility study data for climate zones 1:5, 11:13  
+https://aceee.org/sites/default/files/pdf/conferences/hwf/2018/2a-delforge.pdf  
 Using CZ 5 data for CZ 6:10, 14:15,
 CZ 1 data for CZ 16
 Approximation uses heating degree days ranges from PGE   https://www.pge.com/includes/docs/pdfs/about/edusafety/training/pec/toolbox/arch/climate/california_climate_zones_01-16.pdf
