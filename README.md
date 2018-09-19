@@ -6,6 +6,9 @@ Data sources within PG Study:
 California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012  
 California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
 
+Useful EnergyStar description of HPWH: “To move the heat, heat pumps work like a refrigerator in reverse. While a refrigerator pulls heat from inside a box and dumps it into the surrounding room, a stand-alone air-source heat pump water heater pulls heat from the surrounding air and dumps it -- at a higher temperature -- into a tank to heat water.”  
+
+
 --------------------------------------------------------------------------------------------------------------------------------------
 Github system and planning to review the model:  
 Enables version control  
