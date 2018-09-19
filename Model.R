@@ -625,9 +625,21 @@ non_TOU_cashflow_tables <- merge(non_TOU_cashflow_tables,
                              by.x = "base_tech_name",
                              by.y = "tech_name")
 
+TOU_cashflow_tables <- merge(TOU_cashflow_tables, 
+                             select(technology_list, tech_name, costs), 
+                             by.x = "code_tech_name",
+                             by.y = "tech_name")
+
+non_TOU_cashflow_tables <- merge(non_TOU_cashflow_tables, 
+                                 select(technology_list, tech_name, costs), 
+                                 by.x = "code_tech_name",
+                                 by.y = "tech_name")
+
+
 for(year in (current_year+1):project_until){
   year_column <- select(TOU_cashflow_tables,
                         base_tech_name:first_year_incremental_cost,
+                        code_costs = costs,
                         EUL,
                         temp = vars_select(names(TOU_cashflow_tables),
                                     contains(as.character(year))))
@@ -636,13 +648,14 @@ for(year in (current_year+1):project_until){
               contains(as.character(year))) 
   
   year_column <- year_column %>% mutate(temp = ifelse((delivery_type == "RET") & (year > (current_year + EUL/3)),
-                                           temp - first_year_incremental_cost,
+                                           temp + code_costs,
                                            temp))
   
   TOU_cashflow_tables[name] <- year_column$temp
   
   year_column <- select(non_TOU_cashflow_tables,
                         base_tech_name:first_year_incremental_cost,
+                        code_costs = costs,
                         EUL,
                         temp = vars_select(names(non_TOU_cashflow_tables),
                                            contains(as.character(year))))
@@ -651,15 +664,32 @@ for(year in (current_year+1):project_until){
                       contains(as.character(year))) 
   
   year_column <- year_column %>% mutate(temp = ifelse((delivery_type == "RET") & (year > (current_year + EUL/3)),
-                                                      temp - first_year_incremental_cost,
+                                                      temp + code_costs,
                                                       temp))
   
   non_TOU_cashflow_tables[name] <- year_column$temp
   
 }
 
-TOU_cashflow_tables <- select(TOU_cashflow_tables, -EUL)
-non_TOU_cashflow_tables <- select(non_TOU_cashflow_tables, -EUL)
+TOU_cashflow_tables <- select(TOU_cashflow_tables, 
+                              base_tech_name,
+                              code_tech_name,
+                              efficient_tech_name,
+                              climate_zone,
+                              building_type,
+                              delivery_type,
+                              first_year_incremental_cost,
+                              vars_select(names(TOU_cashflow_tables), contains("savings")))
+
+non_TOU_cashflow_tables <- select(non_TOU_cashflow_tables, 
+                              base_tech_name,
+                              code_tech_name,
+                              efficient_tech_name,
+                              climate_zone,
+                              building_type,
+                              delivery_type,
+                              first_year_incremental_cost,
+                              vars_select(names(non_TOU_cashflow_tables), contains("savings")))
 
 write.xlsx(as.data.frame(non_TOU_cashflow_tables), 
            "Potential_Model_Output_Tables/non_TOU_cashflow_tables.xlsx", 
