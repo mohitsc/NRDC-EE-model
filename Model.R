@@ -11,6 +11,7 @@ library(readr)
 library(tidyselect)
 library(readbulk)
 library(data.table)
+library(RColorBrewer)
 
 # Inputs ------------------------------------------------------------------
 # Climate Zones
@@ -860,33 +861,44 @@ write.xlsx(as.data.frame(net_emissions),
            row.names = FALSE,
            sheetName = "R_output")
 
-####################################### Graphing Emissions and costs ##############################################
+######################################################### Graphs ###################################################
 
+#Graphing cashflow ----------------------------------------------------
 graphing_emissions<- gather(net_emissions,
                             year,
                             ghg_savings,
                             -(base_tech_name:building_type)) %>% 
-  mutate(year = parse_number(year)) %>% 
-  group_by(base_tech_name, year)
+  mutate(year = parse_number(year))
+
+graphing_emissions <- merge(graphing_emissions, 
+                            select(technology_list, tech_name, tech_group),
+                            by.x = "base_tech_name",
+                            by.y = "tech_name") %>%
+  group_by(tech_group, base_tech_name, year)
+
+
 
 #Emissions savings by measure, taking sum of climate zones and looking only at ROB
 graphing_emissions %>%
   summarise(ghg_savings_mmtCO2 = as.integer(sum(ghg_savings))/(10^6)) %>% 
-  ggplot(aes(x = year, y = ghg_savings_mmtCO2, label=ifelse(year== 2019 | year == 2030, ghg_savings_mmtCO2,''))) +
+  ggplot(aes(x = year, 
+             y = ghg_savings_mmtCO2, 
+             color = base_tech_name,
+             label=ifelse(year== 2019 | year == 2030, ghg_savings_mmtCO2,''))) +
   geom_line(size = 1) + 
-  theme_bw() + 
+  scale_color_brewer(palette="Dark2") +
   geom_point() +
-  facet_wrap(~ base_tech_name) + 
+  facet_wrap(~ tech_group) + 
   theme(text = element_text(size=9.5),
         axis.text.x = element_text(angle=15, hjust=1)) +
-  geom_text_repel(point.padding = 0.5) +
+  geom_text_repel(point.padding = 1) +
   ggtitle("Statewide Lifetime GHG savings") +
   labs(x="Year",y="GHG Savings (MMT CO2)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) + 
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
 
-#Graphing cashflow
+#Graphing cashflow ----------------------------------------------------
 
 graphing_non_TOU_cashflow <- gather(non_TOU_cashflow_tables,
                                     year,
@@ -904,6 +916,7 @@ filter(graphing_non_TOU_cashflow, delivery_type == "RET") %>%
   geom_vline(xintercept = 2022, linetype = "dashed") + 
   geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 4, angle = 90) + 
   theme_bw() + 
+  scale_color_brewer(palette="Dark2") +
   geom_line() +
   facet_wrap(~ base_tech_name) +
   theme(text = element_text(size=9.5),
@@ -929,6 +942,7 @@ filter(graphing_TOU_cashflow, delivery_type == "ROB") %>%
   geom_vline(xintercept = 2022, linetype = "dashed") +
   geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 4, angle = 90) +
   theme_bw() +
+  scale_color_brewer(palette="Dark2") +
   geom_line() +
   facet_wrap(~ base_tech_name) +
   theme(text = element_text(size=9.5),
@@ -938,3 +952,31 @@ filter(graphing_TOU_cashflow, delivery_type == "ROB") %>%
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) + 
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
+
+#Graphing spending ----------------------------------------------------
+total_spending <- merge(total_non_TOU_spending, total_TOU_spending,
+                        by = c("base_tech_name", "efficient_tech_name", "delivery_type")) %>%
+  rename("total_non_TOU_spending" = "total_spending.x",
+         "total_TOU_spending" = "total_spending.y")
+
+total_spending <- merge(total_spending, 
+                        select(technology_list, tech_name, tech_group),
+                        by.x = "base_tech_name",
+                        by.y = "tech_name")
+
+total_spending <- total_spending %>%
+  group_by(base_tech_name, tech_group, delivery_type)
+
+total_spending %>%
+  summarise("non_TOU_spending" = mean(total_non_TOU_spending),
+            "TOU_spending" = mean(total_TOU_spending)) %>% 
+  ggplot(aes(x = base_tech_name, y = non_TOU_spending)) +
+  theme_bw() +
+  facet_wrap(~ tech_group) +
+  geom_bar(stat = "identity") +
+  theme(text = element_text(size=9.5),
+        axis.text.x = element_text(angle=15, hjust=1)) + 
+  ggtitle("TOU Spending for 3 Year Payback") +
+  labs(x="Base Technology",y="Total Spending ($)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18))

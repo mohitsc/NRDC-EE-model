@@ -463,11 +463,11 @@ tech_saturation <- initial_tech_saturation_elec
 tech_saturation <- tech_saturation %>% 
   mutate( "Small Electric Storage Water Heater (0.86 EF)" = tech_saturation$`0.84-0.879 EF`,
           "Small Electric Storage Water Heater (0.90 EF)" = tech_saturation$`0.88-0.919 EF`,
-          "High Eff. Small Electric Storage Water Heater (0.93 EF)" = tech_saturation$`0.92-0.959 EF`) %>%
+          "High Eff. Small Electric Storage Water Heater (0.945 EF)" = tech_saturation$`0.92-0.959 EF`) %>%
   select(climate_zone, 
          "Small Electric Storage Water Heater (0.86 EF)",
          "Small Electric Storage Water Heater (0.90 EF)",
-         "High Eff. Small Electric Storage Water Heater (0.93 EF)")
+         "High Eff. Small Electric Storage Water Heater (0.945 EF)")
 
 tech_saturation <- arrange(gather(tech_saturation, tech_name, saturation, -climate_zone), climate_zone)
 
@@ -479,7 +479,7 @@ for(year in start_year:current_year){
   EUL <- 13
   below_code <- filter(tech_saturation, tech_name == "Small Electric Storage Water Heater (0.86 EF)")
   code_before_2015 <- filter(tech_saturation, tech_name == "Small Electric Storage Water Heater (0.90 EF)")
-  code_after_2015 <- filter(tech_saturation, tech_name == "High Eff. Small Electric Storage Water Heater (0.93 EF)")
+  code_after_2015 <- filter(tech_saturation, tech_name == "High Eff. Small Electric Storage Water Heater (0.945 EF)")
 
   if(year < 2015){
     code_after_2015$saturation <- code_after_2015$saturation + 
