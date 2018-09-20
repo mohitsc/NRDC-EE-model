@@ -927,15 +927,17 @@ graphing_emissions %>%
   geom_point() +
   theme_bw() +
   theme(text = element_text(size=20),
-        axis.text.x = element_text(angle=15, hjust=1)) +
-  geom_text(size = 7, vjust = -0.3, color = "black") +
+        axis.text.x = element_text(angle=15, hjust=1.5)) +
+  geom_text(size = 7, vjust = -0.1, hjust = 1, color = "black") +
   ggtitle("Statewide Lifetime GHG savings") +
   labs(x="Year",y="GHG Savings (MMT CO2)", col = "Technology Group") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=20)) + 
   theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
         axis.text.y = element_text(face="bold", size=18)) + 
-  scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
+  scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm"))
+
 
 
 #TOU cashflow graph--------------------------------------------------------------------------------------
@@ -1029,10 +1031,10 @@ total_spending %>%
             "TOU_spending" = sum(total_TOU_spending)/10^9) %>% 
   ggplot(aes(x = tech_group, y = TOU_spending, fill = tech_group, label = round(TOU_spending, 2))) +
   theme_bw() +
-  theme(strip.text.x = element_text(size = 20, colour = "black")) +
+  theme(strip.text.x = element_text(size = 20, colour = "black", face = "bold")) +
   guides(fill = FALSE) +
   scale_fill_brewer(palette="Set1") +
-  geom_text(size = 6, vjust = -0.4) +
+  geom_text(size = 6, vjust = -0.2, fontface = "bold") +
   facet_wrap(~ delivery_type) +
   geom_col(position = "stack") +
   theme(text = element_text(size = 20),
@@ -1041,9 +1043,10 @@ total_spending %>%
   labs(x="",y="Total Spending (billion $)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) +
-  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+  theme(axis.text.x = element_text(face="bold", size=15, angle = 0, hjust = 0.5),
         axis.text.y = element_text(face="bold", size=18)) +  
-  scale_y_continuous(breaks=c(0:7))
+  scale_y_continuous(breaks=c(0:7)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm"))
 
 #non-TOU
 total_spending %>%
@@ -1052,8 +1055,8 @@ total_spending %>%
   ggplot(aes(x = tech_group, y = non_TOU_spending, fill = tech_group, label=  round(non_TOU_spending, 2))) +
   theme_bw() +
   guides(fill = FALSE) +
-  geom_text(size = 6, vjust = -0.4) +
-  theme(strip.text.x = element_text(size = 20, colour = "black")) +
+  geom_text(size = 6, vjust = -0.2, fontface = "bold") +
+  theme(strip.text.x = element_text(size = 20, colour = "black", face = "bold")) +
   scale_fill_brewer(palette="Set1") +
   facet_wrap(~ delivery_type) +
   geom_col(position = "stack") +
@@ -1063,9 +1066,10 @@ total_spending %>%
   labs(x="",y="Total Spending (billion $)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) +
-  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+  theme(axis.text.x = element_text(face="bold", size=18, angle = 0, hjust = 0.5),
         axis.text.y = element_text(face="bold", size=18)) +  
-  scale_y_continuous(breaks=c(0:7))
+  scale_y_continuous(breaks=c(0:7)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm"))
 
 # Installs per Year -----------------------------------------------------------------------
   graphing_installs <- merge(installs_per_year,
