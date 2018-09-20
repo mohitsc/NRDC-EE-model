@@ -874,29 +874,34 @@ graphing_emissions <- merge(graphing_emissions,
                             select(technology_list, tech_name, tech_group),
                             by.x = "base_tech_name",
                             by.y = "tech_name") %>%
-  group_by(tech_group, base_tech_name, year)
+  group_by(tech_group, year)
 
 
 
 #Emissions savings by measure, taking sum of climate zones and looking only at ROB
 graphing_emissions %>%
-  summarise(ghg_savings_mmtCO2 = as.integer(sum(ghg_savings))/(10^6)) %>% 
+  summarise(ghg_savings_mmtCO2 = round(sum(ghg_savings)/(10^6), digits = 2)) %>% 
   ggplot(aes(x = year, 
-             y = ghg_savings_mmtCO2, 
-             color = base_tech_name,
+             y = ghg_savings_mmtCO2,
+             color = tech_group,
+             height = 7,
+             width = 7,
              label=ifelse(year== 2019 | year == 2030, ghg_savings_mmtCO2,''))) +
-  geom_line(size = 1) + 
-  scale_color_brewer(palette="Dark2") +
+  geom_line(size = 1) +
+  scale_color_brewer(palette="Set1") +
   geom_point() +
-  facet_wrap(~ tech_group) + 
-  theme(text = element_text(size=9.5),
+  theme_bw() +
+  theme(text = element_text(size=20),
         axis.text.x = element_text(angle=15, hjust=1)) +
-  geom_text_repel(point.padding = 1) +
+  geom_text_repel(size = 5, point.padding = 1, min.segment.length = 2) +
   ggtitle("Statewide Lifetime GHG savings") +
-  labs(x="Year",y="GHG Savings (MMT CO2)") + 
+  labs(x="Year",y="GHG Savings (MMT CO2)", col = "Technology Group") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
-  theme(axis.title = element_text(size=18)) + 
+  theme(axis.title = element_text(size=20)) + 
+  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+        axis.text.y = element_text(face="bold", size=18)) + 
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
+
 
 #Graphing cashflow ----------------------------------------------------
 
@@ -904,29 +909,36 @@ graphing_non_TOU_cashflow <- gather(non_TOU_cashflow_tables,
                                     year,
                                     cashflow,
                                     -(base_tech_name:first_year_incremental_cost)) %>% 
-  mutate(year = parse_number(year)) %>% 
-  group_by(base_tech_name, efficient_tech_name, year)
+  mutate(year = parse_number(year))
+
+graphing_non_TOU_cashflow <- merge(graphing_non_TOU_cashflow, 
+                            select(technology_list, tech_name, tech_group),
+                            by.x = "base_tech_name",
+                            by.y = "tech_name") %>%
+  group_by(tech_group, delivery_type, year)
 
 #average of all climate zones
-filter(graphing_non_TOU_cashflow, delivery_type == "RET") %>%
+graphing_non_TOU_cashflow %>%
   summarise(cashflow = mean(cashflow)) %>% 
-  ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
+  ggplot(aes(x = year, y = cashflow, color = delivery_type)) +
   geom_line(size = 1) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 2022, linetype = "dashed") + 
-  geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 4, angle = 90) + 
+  geom_text(aes(x=2022, label="3 year Payback", y = 1200), color= "black", size = 8, angle = 90) + 
   theme_bw() + 
   scale_color_brewer(palette="Dark2") +
   geom_line() +
-  facet_wrap(~ base_tech_name) +
-  theme(text = element_text(size=9.5),
+  facet_wrap(~ tech_group) +
+  theme(text = element_text(size=20),
         axis.text.x = element_text(angle=15, hjust= 1)) + 
-  ggtitle("Non-TOU Cashflow for each Base Model") +
-  labs(x="Year",y="Net Savings ($)") + 
+  ggtitle("Non-TOU Cashflow (per unit)") +
+  labs(x="Year",y="Net Savings ($)", col = "Delivery Type") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
-  theme(axis.title = element_text(size=18)) + 
+  theme(axis.title = element_text(size=18)) +
+  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+        axis.text.y = element_text(face="bold", size=18)) +  
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
-  
+
 graphing_TOU_cashflow <- gather(TOU_cashflow_tables,
                                     year,
                                     cashflow,
@@ -934,7 +946,7 @@ graphing_TOU_cashflow <- gather(TOU_cashflow_tables,
   mutate(year = parse_number(year)) %>% 
   group_by(base_tech_name, efficient_tech_name, year)
 
-filter(graphing_TOU_cashflow, delivery_type == "ROB") %>%
+filter(graphing_TOU_cashflow, delivery_type == "RET") %>%
   summarise(cashflow = mean(cashflow)) %>% 
   ggplot(aes(x = year, y = cashflow, color = efficient_tech_name)) +
   geom_line(size = 1) +
