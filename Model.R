@@ -1,6 +1,6 @@
 # Technical Potential Model 1
 
-# Import necessary packages ---------------------------------------------------------------
+# Import packages and data ---------------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(readxl)
@@ -13,7 +13,6 @@ library(readbulk)
 library(data.table)
 library(RColorBrewer)
 
-# Inputs ------------------------------------------------------------------
 # Climate Zones
 climate_zone_list <- tbl_df(read_excel("Potential_Model_Input_Tables/climate_zone_list.xlsx", sheet = "R_input"))
 
@@ -27,7 +26,7 @@ technology_list <- tbl_df(read_excel("Potential_Model_Input_Tables/independent_t
 tech_density <- tbl_df(read_excel("Potential_Model_Input_Tables/tech_group_density_table.xlsx", sheet = "R_input"))
 
 # Measure Table
-measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/sample_measure_table.xlsx", 
+measure_table <- tbl_df(read_excel("Potential_Model_Input_Tables/measure_table.xlsx", 
                                    sheet = "R_input"))
 # Consumption Table
 consumption_table <- tbl_df(read_excel("Potential_Model_Input_Tables/input_consumption_table.xlsx", sheet = "R_input"))
@@ -47,8 +46,7 @@ ghg_loadshapes_kwh <- tbl_df(read_excel("Potential_Model_Input_Tables/ghg_loadsh
 ghg_loadshapes_therms <- tbl_df(read_excel("Potential_Model_Input_Tables/ghg_loadshape.xlsx", sheet = "gas"))
 
 
-
-# Per Unit Savings Table -----------------------------------------------------------
+# Per Unit Savings Table ------------------------------------------------------------------------------------
 
 per_unit_savings_table <- merge(measure_table, 
                                 consumption_table, 
@@ -780,6 +778,14 @@ total_non_TOU_spending <- non_TOU_spending %>%
            spending_2030) %>% 
   select(base_tech_name:delivery_type, total_spending)
 
+non_TOU_cashflow_2022 <- merge(non_TOU_cashflow_2022, 
+                               select(technology_list, tech_name, tech_group),
+                               by.x = "base_tech_name",
+                               by.y = "tech_name") %>%
+  group_by(tech_group, climate_zone, delivery_type)
+
+mean_non_TOU_spending <- summarise(non_TOU_cashflow_2022, spending = mean(unit_spending))
+
 ################### Estimating total non TOU societal spending by applying installs in each CZ to per unit savings ###################
 TOU_cashflow_2022 <- gather(TOU_cashflow_tables,
                                 year,
@@ -838,6 +844,14 @@ total_TOU_spending <- TOU_spending %>%
            spending_2029 + 
            spending_2030) %>% 
   select(base_tech_name:delivery_type, total_spending)
+
+TOU_cashflow_2022 <- merge(TOU_cashflow_2022, 
+                               select(technology_list, tech_name, tech_group),
+                               by.x = "base_tech_name",
+                               by.y = "tech_name") %>%
+  group_by(tech_group, climate_zone, delivery_type)
+
+mean_TOU_spending <- summarise(TOU_cashflow_2022, spending = mean(unit_spending))
 
 ############################################## GHG Analysis #########################################################
 
@@ -898,7 +912,7 @@ write.xlsx(as.data.frame(net_emissions),
 
 ######################################################### Graphs ###################################################
 
-#Graphing cashflow ----------------------------------------------------
+#Graphing emissions ----------------------------------------------------
 graphing_emissions<- gather(net_emissions,
                             year,
                             ghg_savings,
@@ -923,14 +937,13 @@ graphing_emissions %>%
              width = 7,
              label=ifelse(year == 2030, round(ghg_savings_mmtCO2, 2), ''))) +
   geom_line(size = 1) +
-  scale_color_brewer(palette="Set1") +
+  scale_color_brewer(palette="Set1", labels = c("Electric Resistance to Heat Pump", "Gas Storage to Heat Pump")) +
   geom_point() +
   theme_bw() +
-  theme(text = element_text(size=20),
-        axis.text.x = element_text(angle=15, hjust=1.5)) +
+  theme(text = element_text(size=20, vjust = -1)) +
   geom_text(size = 7, vjust = -0.1, hjust = 1, color = "black") +
   ggtitle("Statewide Lifetime GHG savings") +
-  labs(x="Year",y="GHG Savings (MMT CO2)", col = "Technology Group") + 
+  labs(x="Year",y="GHG Savings (MMT CO2)", col = "Measure Group") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=20)) + 
   theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
@@ -1023,7 +1036,7 @@ total_spending <- merge(total_spending,
                         by.y = "tech_name")
 
 total_spending <- total_spending %>%
-  group_by(tech_group, delivery_type)
+  group_by(tech_group)
 
 #TOU
 total_spending %>%
@@ -1035,11 +1048,10 @@ total_spending %>%
   guides(fill = FALSE) +
   scale_fill_brewer(palette="Set1") +
   geom_text(size = 6, vjust = -0.2, fontface = "bold") +
-  facet_wrap(~ delivery_type) +
   geom_col(position = "stack") +
   theme(text = element_text(size = 20),
         axis.text.x = element_text(angle=0, hjust=1)) + 
-  ggtitle("TOU Spending for 3 Year Payback") +
+  ggtitle("Statewide TOU Spending for 3 Year Payback") +
   labs(x="",y="Total Spending (billion $)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) +
@@ -1058,11 +1070,10 @@ total_spending %>%
   geom_text(size = 6, vjust = -0.2, fontface = "bold") +
   theme(strip.text.x = element_text(size = 20, colour = "black", face = "bold")) +
   scale_fill_brewer(palette="Set1") +
-  facet_wrap(~ delivery_type) +
   geom_col(position = "stack") +
   theme(text = element_text(size = 20),
         axis.text.x = element_text(angle=0, hjust=1)) + 
-  ggtitle("Non-TOU Spending for 3 Year Payback") +
+  ggtitle("Statewide Non-TOU Spending for 3 Year Payback") +
   labs(x="",y="Total Spending (billion $)") + 
   theme(plot.title = element_text(size= 26, hjust=0)) +
   theme(axis.title = element_text(size=18)) +
@@ -1176,3 +1187,82 @@ graphing_lifetime_therms %>%
   theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
         axis.text.y = element_text(face="bold", size=18)) + 
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
+
+# Climate zone wise GHG savings
+
+filter(graphing_emissions, tech_group == "Gas Water Heaters")  %>%
+  group_by(climate_zone) %>%
+  summarise("ghg_savings" = sum(ghg_savings)/10^6) %>% 
+  ggplot(aes(x = climate_zone, 
+             y = ghg_savings,
+             label = round(ghg_savings, 2))) +
+  theme_bw() +
+  theme(strip.text.x = element_text(size = 10, colour = "black", face = "bold")) +
+  geom_text(size = 5, vjust = -0.2, fontface = "bold") +
+  geom_col(position = "stack") +  
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(angle=0, hjust=1)) + 
+  ggtitle("Overall GHG Savings 2018-2030 (Gas-HPWH)") +
+  labs(x="Climate Zone",y="GHG Savings (MMT CO2)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18)) +
+  theme(axis.text.x = element_text(face="bold", size=12, angle = 0, hjust = 0.5),
+        axis.text.y = element_text(face="bold", size=18)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm")) + 
+  scale_x_continuous(breaks=1:16)
+
+# Climate zone wise unit spending TOU
+
+mean_TOU_spending  %>%
+  ggplot(aes(x = climate_zone, 
+             y = spending,
+             label = round(spending, 2),
+             fill = delivery_type)) +
+  theme_classic() +
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(angle=0, hjust=1)) + 
+  theme(strip.text.x = element_text(size = 10, colour = "black", face = "bold")) +
+  scale_fill_brewer(palette="Pastel2") +
+  geom_col(position = "stack") +  
+  geom_text(size = 4, fontface = "bold", angle = 90, hjust = 1) +
+  facet_wrap(~ tech_group) + 
+  ggtitle("Per Unit TOU Spending for 3 Year Payback") +
+  labs(x="Climate Zone",y="Spending ($)", fill = "Delivery Type") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18)) +
+  theme(axis.text.x = element_text(face="bold", size=12, angle = 0, hjust = 0.5),
+        axis.text.y = element_text(face="bold", size=18)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm")) + 
+  scale_x_continuous(breaks=1:16)
+
+# Climate zone wise unit spending non-TOU
+
+mean_non_TOU_spending  %>%
+  ggplot(aes(x = climate_zone, 
+             y = spending,
+             label = round(spending, 2),
+             fill = delivery_type)) +
+  theme_classic() +
+  theme(text = element_text(size = 20),
+        axis.text.x = element_text(angle=0, hjust=1)) + 
+  theme(strip.text.x = element_text(size = 10, colour = "black", face = "bold")) +
+  scale_fill_brewer(palette="Pastel2") +
+  geom_col(position = "stack") +  
+  geom_text(size = 4, fontface = "bold", angle = 90, hjust = 1) +
+  facet_wrap(~ tech_group) + 
+  ggtitle("Per Unit Non-TOU Spending for 3 Year Payback") +
+  labs(x="Climate Zone",y="Spending ($)", fill = "Delivery Type") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=18)) +
+  theme(axis.text.x = element_text(face="bold", size=12, angle = 0, hjust = 0.5),
+        axis.text.y = element_text(face="bold", size=18)) +
+  theme(plot.margin=unit(c(1,1,1.5,1.2),"cm")) + 
+  scale_x_continuous(breaks=1:16)
+non_TOU_cashflow_2022 <- merge(non_TOU_cashflow_2022, 
+                               select(technology_list, tech_name, tech_group),
+                               by.x = "base_tech_name",
+                               by.y = "tech_name") %>%
+  group_by(tech_group, climate_zone, delivery_type)
+
+mean_TOU_spending <- summarise(non_TOU_cashflow_2022, spending = mean(unit_spending))
+

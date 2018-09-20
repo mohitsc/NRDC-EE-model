@@ -1,17 +1,22 @@
 #07/06/2018
-#Energy Efficiency Potential and Goals: Study for 2018 and Beyond
-#CPUC MICS 2017 Database
+#Inputs to NRDC Tech Potential and Economic Analysis Model
 
 # Import necessary packages ----------------------------------------------------------
 library(dplyr)
 library(tidyr)
 library(readxl)
 library(ggplot2)
+library(ggrepel)
 library(xlsx)
 library(readr)
 library(tidyselect)
 library(readbulk)
 library(data.table)
+library(RColorBrewer)
+
+#Energy Efficiency Potential and Goals: Study for 2018 and Beyond
+#CPUC MICS 2017 Database
+
 
 # PG Data Input -------------------------------------------------------------------------------------------------------
 pg_water_data <- read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx")
@@ -106,10 +111,10 @@ write.xlsx(as.data.frame(consumption),
 
 # Writing saturation by climate zone data 
 saturation_PG_data <- select(working_PG_data,
-                              climate_zone,
-                              tech_name,
-                              tech_group,
-                              tech_initial_saturation)%>% 
+                             climate_zone,
+                             tech_name,
+                             tech_group,
+                             tech_initial_saturation)%>% 
   arrange(climate_zone)
 
 saturation_PG_data <- arrange(saturation_PG_data, tech_name) %>% 
@@ -152,8 +157,6 @@ write.xlsx(as.data.frame(tech_costs),
            "PG_Data+Reports/PG_tech_costs_table.xlsx", 
            row.names = FALSE,
            sheetName = "R_input")
-
-
 
 # Writing density data ----------------------------------------------------------------------------------------------
 #Density of gas and electric WH
@@ -315,7 +318,7 @@ write.xlsx(as.data.frame(final_weighted_HPWH),
 
 
 
-# Calculating consumption values of base measures -------------------------
+# Calculating consumption values of base technology -------------------------
 # Technology List
 technology_list <- tbl_df(read_excel("Potential_Model_Input_Tables/independent_tech_list.xlsx", sheet = "R_input"))
 
@@ -342,7 +345,7 @@ technology_consumption <- technology_consumption %>%
   rename(weighted_HPWH_consumption_kwh = weighted_consumption_kWh,
          weighted_HPWH_cop = weighted_COP)
 
-#calculating kwh consumption of base measure by HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor
+#calculating kwh consumption of base technology by HPWH_consumption * HPWH_COP / Base_Tech_Efficiency_Factor
 technology_consumption$efficiency_factor <- ifelse(technology_consumption$tech_name == "GE 2014 Heat Pump Water Heater- low cost" | 
                                                      technology_consumption$tech_name == "GE 2014 Heat Pump Water Heater- medium cost" |
                                                      technology_consumption$tech_name == "GE 2014 Heat Pump Water Heater- high cost" ,
@@ -642,7 +645,7 @@ loadshapes <- loadshapes %>%
          -input_kwh)
  
 loadshapes <- loadshapes %>% 
-  mutate(hour_8760 = rep(1:8760, times = 2 * length(climate_zone_list$climate_zone)))
+  mutate(hour_8760 = rep(1:8760, times = 2 * length(climate_zones$climate_zone)))
 
 loadshapes <- loadshapes %>%
   select(loadshape_label,
