@@ -1,19 +1,16 @@
-# NRDC-EE-model
-Mohit Chhabra and Vivan Malkani Technical/Economic Potential Model
+**Technical Potential and Economic Analysis Model: Heat Pump Water Heaters**  
+Mohit Chhabra and Vivan Malkani 
+Natural Resources Defense Council  
+July-Sep 2018  
+Contact: vivanm@stanford.edu  
 
-2017 CPUC PG Study for technology names  
-Data sources within PG Study:  
-California Lighting & Appl. Saturation Survey (CLASS), Residential baseline study of 1,987 homes across California, DNV GL 2012  
-California Energy Commission: Residential Appliance Saturation Survey 2009 Dataset for housing numbers and gas/electric WH density data
-
-Useful EnergyStar description of HPWH: “To move the heat, heat pumps work like a refrigerator in reverse. While a refrigerator pulls heat from inside a box and dumps it into the surrounding room, a stand-alone air-source heat pump water heater pulls heat from the surrounding air and dumps it -- at a higher temperature -- into a tank to heat water.”  
-
-
---------------------------------------------------------------------------------------------------------------------------------------
-Github system and planning to review the model:  
-Enables version control  
-Easy to share code   
-Allows for collaboration, review and feedback  
+**Data Sources**
+Saturation, Water Heater Sizes: California Lighting & Appliance Saturation Survey (CLASS) 2012  
+Population, Density: Residential Appliance Saturation Survey (RASS) 2009   
+Loadshapes and TOU rate: NRDC/Ecotope HPWH Demand Flexibility Study  
+Base Rates and Forecasts: California Energy Commission Integrated Energy Policy Report 2017  
+Consumption: NRDC/Ecotope HPWH Performance Data (California)  
+Installation Location: NEEA Residential Building Stock Assessment II: Single-Family Homes Report 2016-2017  
 
 --------------------------------------------------------------------------------------------------------------------------------------
 Regional Population data from RASS 2009  
@@ -34,8 +31,7 @@ Selection of 02. Energy Factor - Bins , Report Year: 2012 , Weighting Scheme: Ce
 For Electric: CZ 4 and 8 and 15 are average of the rest
 
 --------------------------------------------------------------------------------------------------------------------------------------
-
-Pierre HPWH Ecotop 2016 data for HPWH performance by CZ, location: https://www.dropbox.com/sh/031btkwxhr3gfkv/AABtX0Mv6YBkClBdMeHGG_Kpa?dl=0    
+HPWH Ecotope 2016 data for HPWH performance in California
 Using GE2014 model, only looking at households with 3 people  (avg household size for CA = 2.9)  
 Selecting GE2014 because most efficient non-CO2 powered HPWH  
 
@@ -46,8 +42,7 @@ Technical Potential = per unit savings * installable measures
 base_consumption_therms = 0.03412956 * base_consumption_kwh  
 Variability of ER and gas water heaters probably won't be as much as EHP (overall usage will be similar but efficiency fluctuation won't be as much as EHP)  
 
-Weighting by location from NEEA:    
-NEEA Residential Building Stock Assessment 2016/2017  
+Weighting by location from NEEA:     
 Basement: Basement + Crawlspace  
 Garage: Garage + Other  
 Vented Closet: Main House  
@@ -86,7 +81,6 @@ Per Unit Savings:
 ROB per unit savings = [code technology consumption – efficient technology consumption]  
 RET per unit savings = [base technology consumption – efficient technology consumption] for RUL period 1 and then [code technology consumption – efficient technology consumption] for period 2  
 
---------------------------------------------------------------------------------------------------------------------------------------
 Technical potential estimates:  
  Potential installs for each year  
  First year savings in kWh = per unit savings * installs that year  
@@ -94,25 +88,23 @@ Technical potential estimates:
  Lifetime savings for each measure  
 
 --------------------------------------------------------------------------------------------------------------------------------------
-Adding new measures:  
-Saturation table  
-Density table  
-Consumption table  
-Regional Population table (if different from CA Title 24 climate zones)  
+To add new measures, need to have data on:  
+Saturation  
+Density   
+Consumption    
+Regional Population  (if different from CA Title 24 climate zones)  
 EUL  
 
 --------------------------------------------------------------------------------------------------------------------------------------
- Payback Model
+**Payback Model**
 Merrian: referred to in Synapse Study
- "The most comparable model I found was a Rheem 50-gallon tank with three times the efficiency of a standard water heater priced at $1,199 from Home Depot. I polled several utilities, contractors, and energy efficiency program implementers in California and the Pacific Northwest, and the average cost they gave was $2000 to $2600 for equipment, installation, and mark-up"
+"The most comparable model I found was a Rheem 50-gallon tank with three times the efficiency of a standard water heater priced at $1,199 from Home Depot. I polled several utilities, contractors, and energy efficiency program implementers in California and the Pacific Northwest, and the average cost they gave was $2000 to $2600 for equipment, installation, and mark-up"
 https://www.nrdc.org/experts/merrian-borgeson/electric-home-study-biased-shows-ca-wants-clean-energy  
 
 
 Using IEPR 2017 forecast tables for gas and electricity prices of each utility, 2016 to 2030 estimated growth rates: http://www.energy.ca.gov/2017_energypolicy/documents/2018-02-21_business_meeting/2018-02-21_middemandcase_forecst.php  
 
-growth rate for gas estimated by using 2018 to 2030 estimation : future = present (1 + r)^n  
-
-check excel file "climate_zone_rate_mapping"  
+Growth rate for gas estimated by using 2018 to 2030 estimation : future = present (1 + r)^n    
 
 mapping utilities to climate zones:
 http://www.energy.ca.gov/maps/renewable/BuildingClimateZonesMap.pdf  
@@ -128,7 +120,7 @@ Approximation uses heating degree days ranges from PGE   https://www.pge.com/inc
 
 For gas rates, CZ 4 is average of SCG and PGE  
 
-Loadshape data from Pierre HPWH Flexibility Study data for all 16 climate zones  
+Loadshape data from HPWH Flexibility Study data for all 16 climate zones  
 
 GHG Marginal Emissions from CPUC Avoided Cost Calculator 2018 prepared by E3  
 marginal_emissions.xlsx doc in Input_to_Input_Tables  
@@ -138,23 +130,10 @@ For natural gas: Natural Gas Carbon Content (tons/therm): 0.00585
 avg. carbon intensity (over both loadshape labels) for kwh
 
 
-
 --------------------------------------------------------------------------------------------------------------------------------------
-
 Appliance Efficiency Appendix
-Water heaters CEC minimum UEF requirement
-http://www.energy.ca.gov/title24/2016standards/documents/2016_water_heater_efficiency_guide.pdf
 
-CEC 2014 Appliance Efficiency Regulations
+CEC 2014 Appliance Efficiency Regulations, table F-3, pg. 118  
 http://www.energy.ca.gov/2014publications/CEC-400-2014-009/CEC-400-2014-009-CMF.pdf
  
-
-CEC 2005, 2008
-http://www.energy.ca.gov/2008publications/CEC-400-2008-016/rev1_chapters/RCM_Chapter_5_WH.pdf
- 
-CEC 2001
-http://www.energy.ca.gov/title24/archive/2001standards/2001-10-04_400-01-024.PDF
-
-Source of 1999-2003 and 2004-2009
-https://www.eia.gov/analysis/studies/residential/pdf/appendix-a.pdf
 
