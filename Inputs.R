@@ -14,129 +14,22 @@ library(readbulk)
 library(data.table)
 library(RColorBrewer)
 
+# Climate Zone Inputs ---------------------------------------------------------------------------------------
 #Energy Efficiency Potential and Goals: Study for 2018 and Beyond
 #CPUC MICS 2017 Database
+pg_water_data <- tbl_df(read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx"))
+pg_water_data <- select(pg_water_data,
+                          "Climate Zone") %>% rename(climate_zone = "Climate Zone")
 
-
-# PG Data Input -------------------------------------------------------------------------------------------------------
-pg_water_data <- read_excel("PG_Data+Reports/PG_WaterHeaterSubset.xlsx")
-
-working_PG_data <- tbl_df(pg_water_data)
-working_PG_data <- select(pg_water_data,
-                          -"Technology ID", 
-                          -"Unique Technology  Name", 
-                          -"Service Territory", 
-                          -"Primary Utility Type",
-                          -"Base Year Efficiency Level",
-                          -"Year Technology Becomes Code",
-                          -"Conv or Emerging",
-                          -"End Use Category",
-                          -"Sector",
-                          -"Scaling Basis",
-                          -"Unit Basis")
-
-#renaming to enable dplyr function use
-working_PG_data <- rename(working_PG_data,
-                          utility = "Utility",
-                          tech_description = "Technology Description",
-                          tech_name = "Common Technology Name",
-                          climate_zone = "Climate Zone",
-                          building_type = "Building Type",
-                          replacement_type = "Replacement Type",
-                          accelerated_replacement = "Accelerated Replacement?",
-                          retrofit_add_on = "Retrofit Add-on?",
-                          lifetime_technology = "Technology Lifetime",
-                          early_retirement_RUL = "Early Retirement RUL",
-                          repair_EUL = "Repair EUL",
-                          electric_energy_savings_loadshape = "Electric Energy Savings Loadshape",
-                          electric_energy_consumption = "Electric Energy Consumption",
-                          electric_coincident_peak_demand = "Electric Coincident Peak Demand",
-                          gas_savings_loadshape = "Gas Savings Loadshape",
-                          gas_consumption = "Gas Consumption",	
-                          savings_source = "Savings Source(s)",
-                          technology_cost = "Technology Cost",
-                          technology_cost_data_year = "Technology Cost Data Year",
-                          labor_cost = "Labor Cost",
-                          laor_cost_data_year = "Labor Cost Data Year",
-                          cost_sources = "Cost Source(s)",
-                          technology_group = "Technology Group",
-                          tech_group = "Common Technology Group",
-                          total_tech_group_density = "Total Technology Group Density",
-                          technical_suitability = "Technical Suitability",
-                          tech_initial_saturation = "Technology Initial Saturation",	
-                          density_sources = "Density/ Applicability Source(s)",
-                          ntg_factor = "NTG Factor (1-FreeRiders)",
-                          deer_id = "DEER ID(s)"
-)
-
-#Fix common tech name
-working_PG_data <- separate(working_PG_data, tech_name, into = c("other", "tech_name"), extra = "merge")
-working_PG_data <- separate(working_PG_data, building_type, into = c("other2", "building_type"), extra = "merge") %>% 
-  distinct() %>% select(-other,-other2)
-
-working_PG_data <- separate(working_PG_data, climate_zone, sep = '-' , into = c("climate_zone", "location")) 
-working_PG_data <- separate(working_PG_data, climate_zone, 
+pg_water_data <- separate(pg_water_data, climate_zone, sep = '-' , into = c("climate_zone", "location")) 
+pg_water_data <- separate(pg_water_data, climate_zone, 
                             sep = 'CZ' , 
                             into = c("other", "climate_zone"))%>%
   select(-other)
 
-working_PG_data <- transform(working_PG_data, climate_zone = as.numeric(unlist(climate_zone)))
+pg_water_data <- transform(pg_water_data, climate_zone = as.numeric(unlist(climate_zone)))
 
-
-
-# Writing PG data -------------------------------------------------------------------------
-groups_and_measures <- select(working_PG_data, 
-                              tech_name, 
-                              lifetime_technology,
-                              tech_group) %>% distinct()
-write.xlsx(as.data.frame(groups_and_measures), 
-           "PG_Data+Reports/PG_technology_list.xlsx", 
-           row.names = FALSE,
-           sheetName = "R_input")
-
-# Writing PG consumption data 
-consumption <- select(working_PG_data, 
-                      climate_zone,
-                      tech_name,
-                      building_type,
-                      electric_energy_consumption,
-                      gas_consumption,
-                      electric_coincident_peak_demand) %>% distinct() %>% arrange(climate_zone, tech_name)
-
-write.xlsx(as.data.frame(consumption), 
-           "PG_Data+Reports/PG_consumption_table.xlsx", 
-           row.names = FALSE,
-           sheetName = "R_input")
-
-
-# Writing saturation by climate zone data 
-saturation_PG_data <- select(working_PG_data,
-                             climate_zone,
-                             tech_name,
-                             tech_group,
-                             tech_initial_saturation)%>% 
-  arrange(climate_zone)
-
-saturation_PG_data <- arrange(saturation_PG_data, tech_name) %>% 
-  distinct() %>% 
-  group_by(climate_zone, tech_name)
-
-tech_saturation <- tbl_df(summarize(saturation_PG_data, 
-                                    mean_saturation = mean(tech_initial_saturation),
-                                    min_saturation = min(tech_initial_saturation),
-                                    max_saturation = max(tech_initial_saturation))) %>%
-  arrange(climate_zone, tech_name) %>% 
-  mutate(check = (max_saturation - min_saturation)/mean_saturation)
-
-write.xlsx(as.data.frame(tech_saturation), 
-           "PG_Data+Reports/PG_tech_saturation_table.xlsx", 
-           row.names = FALSE,
-           sheetName = "R_input")
-
-
-
-#Climate Zone inputs ---------------------------------------------------------------------------------------
-climate_zones <- select(working_PG_data, climate_zone, location) %>%
+climate_zones <- select(pg_water_data, climate_zone, location) %>%
   distinct() %>% arrange(climate_zone)
 
 write.xlsx(as.data.frame(climate_zones), 
@@ -144,22 +37,8 @@ write.xlsx(as.data.frame(climate_zones),
            row.names = FALSE,
            sheetName = "R_input")
 
-
-
-
-# Writing tech costs data ------------------------------------------------------------------------------------------
-tech_costs <- select(working_PG_data, 
-                     tech_name,
-                     technology_cost,
-                     labor_cost) %>% distinct()
-
-write.xlsx(as.data.frame(tech_costs), 
-           "PG_Data+Reports/PG_tech_costs_table.xlsx", 
-           row.names = FALSE,
-           sheetName = "R_input")
-
-# Writing density data ----------------------------------------------------------------------------------------------
-#Density of gas and electric WH
+# Density Inputs ----------------------------------------------------------------------------------------------
+#Density of gas and electric WH from RASS 2009
 density_gas_wh <- read_xlsx("RASS/density_gas_WH_RASS.xlsx", sheet = "R_input")
 density_elec_wh <- read_xlsx("RASS/density_elec_WH_RASS.xlsx", sheet = "R_input")
 tech_group_cz_density <- cbind(density_elec_wh[,"climate_zone"],
@@ -181,8 +60,8 @@ write.xlsx(as.data.frame(tech_group_cz_density),
            row.names = FALSE,
            sheetName = "R_input")
 
-# Writing housing data ----------------------------------------------------------------------------------------------
-#CEC Title 24 Climate Zone Housing and Density Data
+# Housing Inputs ----------------------------------------------------------------------------------------------
+#RASS Climate Zone Housing and Density Data
 
 #defining single family home as 1-4 units, multi family home as 5+ units
 
@@ -216,24 +95,8 @@ write.xlsx(as.data.frame(housing_cz_data),
            sheetName = "R_input")
 
 
-
-# Writing gas water heater size data ----------------------------------------------------------------------------------------------
-#Climate Zones and proportion of gas water heaters 50< and 50> gallons
-
-gas_wh_size_data <- tbl_df(read_xlsx("Input_to_Input_Tables/CLASS_wh_sizes.xlsx", sheet = "R_input"))
-gas_wh_size_data <- rename(gas_wh_size_data, 
-                           "50" = "0-59_Gallons",
-                           "80" = "60+_Gallons")
-
-gas_wh_size_data <- gather(gas_wh_size_data, size, weighting, -climate_zone)
-
-write.xlsx(as.data.frame(gas_wh_size_data), 
-           "Input_to_Input_Tables/gas_wh_size_table.xlsx", 
-           row.names = FALSE,
-           sheetName = "R_input")
-
-# #Inputting and cleaning Pierre's ECOTOPE HPWH data ----------------------------------------------------------------------------------------------
-
+#HPWH Consumption Inputs ----------------------------------------------------------------------------------------------
+#NRDC/Ecotope HPWH Consumption Study 2016
 HPWH_data <- tbl_df(read_xlsx("Input_to_Input_Tables/HPWH_Pierre_data.xlsx", sheet = "R_Input")) %>%
   select(-Draw_profile,
          -State,
@@ -256,7 +119,26 @@ write.xlsx(as.data.frame(HPWH_data),
 
 
 
-# Water heater installation location data ----------------------------------------------------------------------------------------
+# Installation Location and Size Weighting Calculation----------------------------------------------------------------------------------------
+
+# Gas Water Heater Size Inputs 
+#CLASS 2012
+#Climate Zones and proportion of gas water heaters 50< and 50> gallons
+
+
+gas_wh_size_data <- tbl_df(read_xlsx("Input_to_Input_Tables/CLASS_wh_sizes.xlsx", sheet = "R_input"))
+gas_wh_size_data <- rename(gas_wh_size_data, 
+                           "50" = "0-59_Gallons",
+                           "80" = "60+_Gallons")
+
+gas_wh_size_data <- gather(gas_wh_size_data, size, weighting, -climate_zone)
+
+write.xlsx(as.data.frame(gas_wh_size_data), 
+           "Input_to_Input_Tables/gas_wh_size_table.xlsx", 
+           row.names = FALSE,
+           sheetName = "R_input")
+
+#installation location
 wh_location_data <- tbl_df(read_xlsx("NEEA/wh_installation_location_NEEA.xlsx"))
 wh_location_data <- rename(wh_location_data, 
                            location = "Water Heater Location",
@@ -318,7 +200,7 @@ write.xlsx(as.data.frame(final_weighted_HPWH),
 
 
 
-# Calculating consumption values of base technology -------------------------
+# Base Technology Consumption Calculation -------------------------
 # Technology List
 technology_list <- tbl_df(read_excel("Potential_Model_Input_Tables/independent_tech_list.xlsx", sheet = "R_input"))
 
@@ -375,11 +257,11 @@ write.xlsx(as.data.frame(input_consumption_table),
 
 
 
-# Saturation data from CLASS 2012: modeling tech saturation till 2018 --------------------------------
+# Saturation Input ----------------------------------------------------------------
+#CLASS 2012 
+# Technology Saturation by Uniform Efficiency Factor
 
-# Technology Saturation by EF and CZ
-
-#################################################### Gas ######################################################
+#Gas
 
 initial_tech_saturation_gas <- tbl_df(read_excel("Input_to_Input_Tables/CLASS_instantaneous_and_storage_EF_cz.xlsx", 
                                              sheet = "R_input"))
@@ -455,7 +337,7 @@ for(year in start_year:current_year){
 } 
 
 
-#################################################### Electric####################################################
+#Electric
 
 initial_tech_saturation_elec <- tbl_df(read_excel("Input_to_Input_Tables/CLASS_Electric_Saturation.xlsx", 
                                                   sheet = "R_input"))
@@ -523,7 +405,9 @@ write.xlsx(as.data.frame(saturation_cz_year_wise[[2018]]),
            row.names = FALSE,
            sheetName = "R_input")
 
-# Reading in TOU Rates from Pierre HPWH Flexibility Study, simulation using PGE values----------------------------------------------------
+# Rates Input ----------------------------------------------------
+# Pierre HPWH Flexibility Study, simulation using PGE values
+# TOU
 TOU_rates <- tbl_df(read_excel("Input_to_Input_Tables/Hourly price schedules v13.xlsx", sheet = "R_input"))
 
 TOU_rates <- rename(TOU_rates,
@@ -595,7 +479,8 @@ fwrite(as.data.frame(rates),
        "Input_to_Input_Tables/rates.csv", 
        row.names = FALSE)
 
-# Loadshape data from ECOTOPE Data --------------------------------------------------------------------------------------
+# Loadshape Inputs  --------------------------------------------------------------------------------------
+# NRDC/ECOTOPE Flexibility Study
 
 loadshapes <-  read_bulk(directory = "LoadShapes")
 
@@ -659,7 +544,7 @@ fwrite(as.data.frame(loadshapes),
        "Input_to_Input_Tables/loadshapes.csv", 
        row.names = FALSE)
 
-# Operational Costs for each year operations
+# Operational Costs Calculation  --------------------------------------------------------------------------------------
 #merging loadshape with rates
 operational_costs_8760 <- merge(select(loadshapes, -"hour_8760"), 
                                 rates, 
@@ -722,7 +607,7 @@ write.xlsx(as.data.frame(annual_operational_costs),
            row.names = FALSE,
            sheetName = "R_input")
 
-############################################## Marginal GHGs ####################################################
+# GHG Emissions Input   --------------------------------------------------------------------------------------
 # converting tCO2/kWh = tCO2/MWh / 1000
 
 # marginal greenhouse gas emissions

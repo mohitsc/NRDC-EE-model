@@ -723,7 +723,7 @@ write.xlsx(as.data.frame(TOU_cashflow_tables),
            row.names = FALSE,
            sheetName = "R_output")
 
-######################################  Total societal spending ###################################### 
+######################################  Spending for 3 Year Payback ###################################### 
 
 #non TOU
 non_TOU_cashflow_2022 <- gather(non_TOU_cashflow_tables,
@@ -735,6 +735,15 @@ non_TOU_cashflow_2022 <- gather(non_TOU_cashflow_tables,
 non_TOU_cashflow_2022 <- non_TOU_cashflow_2022 %>% rowwise() %>% 
   mutate(unit_spending = ifelse(cashflow < 0, 0 - cashflow, 0)) %>% 
   select(-code_tech_name, -first_year_incremental_cost, -year, -cashflow)
+
+
+non_TOU_cashflow_2022 <- merge(non_TOU_cashflow_2022, 
+                               select(technology_list, tech_name, tech_group),
+                               by.x = "base_tech_name",
+                               by.y = "tech_name") %>%
+  group_by(tech_group, climate_zone, delivery_type)
+
+mean_non_TOU_spending <- summarise(non_TOU_cashflow_2022, spending = mean(unit_spending))
 
 non_TOU_spending <- merge(non_TOU_cashflow_2022, select(installs_per_year, 
                                                 -base_population_start, 
@@ -795,6 +804,14 @@ TOU_cashflow_2022 <- TOU_cashflow_2022 %>% rowwise() %>%
   mutate(unit_spending = ifelse(cashflow < 0, 0 - cashflow, 0)) %>% 
   select(-code_tech_name, -first_year_incremental_cost, -year, -cashflow)
 
+TOU_cashflow_2022 <- merge(TOU_cashflow_2022, 
+                           select(technology_list, tech_name, tech_group),
+                           by.x = "base_tech_name",
+                           by.y = "tech_name") %>%
+  group_by(tech_group, climate_zone, delivery_type)
+
+mean_TOU_spending <- summarise(TOU_cashflow_2022, spending = mean(unit_spending))
+
 TOU_spending <- merge(TOU_cashflow_2022, select(installs_per_year, 
                                                         -base_population_start, 
                                                         -EUL, 
@@ -846,7 +863,7 @@ total_TOU_spending <- TOU_spending %>%
 
 
 ############################################## GHG Savings #########################################################
-
+#For the whole state
 net_emissions <- select(lifetime_savings_kwh,
                         base_tech_name:delivery_type)
 
@@ -897,10 +914,113 @@ for(loop_year in (current_year+1):project_until){
   names(net_emissions)[names(net_emissions) == "ghg_savings"] <- paste0("ghg_savings_", loop_year)
 }                          
 
+net_emissions <- net_emissions %>%
+  arrange(base_tech_name, efficient_tech_name, climate_zone)
+
 write.xlsx(as.data.frame(net_emissions), 
            "Potential_Model_Output_Tables/net_emissions.xlsx", 
            row.names = FALSE,
            sheetName = "R_output")
+
+################################################# Abatement Costs Calculation ###############################################
+annual_abatement_cost_TOU <- select(net_emissions,
+                                    base_tech_name:building_type)
+
+annual_abatement_cost_TOU <- merge(annual_abatement_cost_TOU, 
+                                   select(technology_list, tech_name, tech_group),
+                                   by.x = "base_tech_name",
+                                   by.y = "tech_name")
+
+#net emissions abated in 2030
+annual_abatement_cost_TOU <- merge(annual_abatement_cost_TOU, 
+                                       select(net_emissions, base_tech_name:building_type, ghg_savings_2030),
+                                       by = c("base_tech_name", 
+                                              "efficient_tech_name",
+                                              "climate_zone", 
+                                              "delivery_type", 
+                                              "building_type"))
+#cash flow in year 2030
+annual_abatement_cost_TOU <- merge(annual_abatement_cost_TOU, 
+                                   select(TOU_cashflow_tables, 
+                                          base_tech_name, 
+                                          efficient_tech_name, 
+                                          climate_zone, 
+                                          delivery_type, 
+                                          building_type, 
+                                          TOU_savings_2030),
+                                   by = c("base_tech_name", 
+                                          "efficient_tech_name",
+                                          "climate_zone", 
+                                          "delivery_type", 
+                                          "building_type"))
+#cumulative installs
+annual_abatement_cost_TOU <- merge(annual_abatement_cost_TOU, 
+                                   select(installs_per_year, 
+                                          base_tech_name, 
+                                          efficient_tech_name, 
+                                          climate_zone, 
+                                          delivery_type, 
+                                          building_type, 
+                                          cumulative_installs),
+                                   by = c("base_tech_name", 
+                                          "efficient_tech_name",
+                                          "climate_zone", 
+                                          "delivery_type", 
+                                          "building_type"))
+
+annual_abatement_cost_TOU <- annual_abatement_cost_TOU %>% 
+  mutate(cost_per_tCO2 = -1 * cumulative_installs * TOU_savings_2030 / ghg_savings_2030) %>%
+  group_by(tech_group, climate_zone) 
+
+#Non TOU
+annual_abatement_cost_non_TOU <- select(net_emissions,
+                                    base_tech_name:building_type)
+
+annual_abatement_cost_non_TOU <- merge(annual_abatement_cost_non_TOU, 
+                                   select(technology_list, tech_name, tech_group),
+                                   by.x = "base_tech_name",
+                                   by.y = "tech_name")
+
+#net emissions abated in 2030
+annual_abatement_cost_non_TOU <- merge(annual_abatement_cost_non_TOU, 
+                                   select(net_emissions, base_tech_name:building_type, ghg_savings_2030),
+                                   by = c("base_tech_name", 
+                                          "efficient_tech_name",
+                                          "climate_zone", 
+                                          "delivery_type", 
+                                          "building_type"))
+#cash flow in year 2030
+annual_abatement_cost_non_TOU <- merge(annual_abatement_cost_non_TOU, 
+                                   select(TOU_cashflow_tables, 
+                                          base_tech_name, 
+                                          efficient_tech_name, 
+                                          climate_zone, 
+                                          delivery_type, 
+                                          building_type, 
+                                          TOU_savings_2030),
+                                   by = c("base_tech_name", 
+                                          "efficient_tech_name",
+                                          "climate_zone", 
+                                          "delivery_type", 
+                                          "building_type"))
+#cumulative installs
+annual_abatement_cost_non_TOU <- merge(annual_abatement_cost_non_TOU, 
+                                   select(installs_per_year, 
+                                          base_tech_name, 
+                                          efficient_tech_name, 
+                                          climate_zone, 
+                                          delivery_type, 
+                                          building_type, 
+                                          cumulative_installs),
+                                   by = c("base_tech_name", 
+                                          "efficient_tech_name",
+                                          "climate_zone", 
+                                          "delivery_type", 
+                                          "building_type"))
+
+annual_abatement_cost_non_TOU <- annual_abatement_cost_non_TOU %>% 
+  mutate(cost_per_tCO2 = -1 * cumulative_installs * TOU_savings_2030 / ghg_savings_2030) %>%
+  group_by(tech_group, climate_zone) 
 
 ################################################### Graphing emissions ###############################################
 graphing_emissions<- gather(net_emissions,
@@ -1040,14 +1160,6 @@ graphing_TOU_cashflow %>%
 ####################################################  Graphing Spending ################################################### 
 
 # Per unit spending TOU for climate zone
-TOU_cashflow_2022 <- merge(TOU_cashflow_2022, 
-                           select(technology_list, tech_name, tech_group),
-                           by.x = "base_tech_name",
-                           by.y = "tech_name") %>%
-  group_by(tech_group, climate_zone, delivery_type)
-
-mean_TOU_spending <- summarise(TOU_cashflow_2022, spending = mean(unit_spending))
-
 mean_TOU_spending  %>%
   ggplot(aes(x = climate_zone, 
              y = spending,
@@ -1071,14 +1183,6 @@ mean_TOU_spending  %>%
   scale_x_continuous(breaks=1:16)
 
 # Per Unit Non-TOU  for climate zone
-
-non_TOU_cashflow_2022 <- merge(non_TOU_cashflow_2022, 
-                               select(technology_list, tech_name, tech_group),
-                               by.x = "base_tech_name",
-                               by.y = "tech_name") %>%
-  group_by(tech_group, climate_zone, delivery_type)
-
-mean_non_TOU_spending <- summarise(non_TOU_cashflow_2022, spending = mean(unit_spending))
 
 mean_non_TOU_spending  %>%
   ggplot(aes(x = climate_zone, 
@@ -1266,5 +1370,42 @@ graphing_lifetime_therms %>%
         axis.text.y = element_text(face="bold", size=18)) + 
   scale_x_continuous(breaks=c(2018, 2020,2022,2024,2026,2028, 2030))
 
+# ################################################### Graphing Annual Abatement Costs ################################################### 
+#Non-TOU
+filter(annual_abatement_cost_non_TOU,
+       tech_group == "Gas Water Heaters",
+       is.finite(cost_per_tCO2)) %>%
+  summarise(cost_per_tCO2 = sum(cost_per_tCO2)) %>% 
+  ggplot(aes(x = climate_zone, 
+             y = cost_per_tCO2)) +
+  geom_col(size = 4) +
+  theme_bw() +
+  theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=15, hjust=1)) +
+  ggtitle("Abatement Costs non-TOU (Cumulative 2018-2030)\nGas to HPWH") +
+  labs(x="Climate Zone",y="Abatement Cost ($/T CO2)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=20)) + 
+  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+        axis.text.y = element_text(face="bold", size=18)) + 
+  scale_x_continuous(breaks=1:16)
 
+# TOU Rates
 
+filter(annual_abatement_cost_TOU,
+       tech_group == "Gas Water Heaters",
+       is.finite(cost_per_tCO2)) %>%
+  summarise(cost_per_tCO2 = sum(cost_per_tCO2)) %>% 
+  ggplot(aes(x = climate_zone, 
+             y = cost_per_tCO2)) +
+  geom_col(size = 4) +
+  theme_bw() +  
+  theme(text = element_text(size=20),
+        axis.text.x = element_text(angle=15, hjust=1)) +
+  ggtitle("Abatement Costs TOU (Cumulative 2018-2030)\nGas to HPWH") +
+  labs(x="Climate Zone",y="Abatement Cost ($/T CO2)") + 
+  theme(plot.title = element_text(size= 26, hjust=0)) +
+  theme(axis.title = element_text(size=20)) + 
+  theme(axis.text.x = element_text(face="bold", size=18, angle = 0),
+        axis.text.y = element_text(face="bold", size=18)) + 
+  scale_x_continuous(breaks=1:16)
